@@ -1,0 +1,502 @@
+@app.get("/ops/markets/{market_id}/snapshot")
+def ops_market_snapshot(
+    market_id: str,
+    timeline_days: int = 30,
+    lookback_days: int = 30,
+    impact_days: int = 14,
+):
+    timeline_days = max(1, min(int(timeline_days), 60))
+    lookback_days = max(1, min(int(lookback_days), 180))
+    impact_days = max(4, min(int(impact_days), 60))
+
+    INCIDENT_EFFECT_DAYS = 30
+    INCIDENT_AFTER_DAYS = 3
+
+    if not market_exists(market_id):
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "market_not_found",
+                "message": "Market not found",
+                "details": {"market_id": market_id},
+            },
+        )
+
+    errors: List[Dict[str, Any]] = []
+
+    def safe_call(key: str, fn, default):
+        try:
+            v = fn()
+            if v is None:
+                return default
+            return v
+        except HTTPException as e:
+            errors.append(
+                {
+                    "key": key,
+                    "message": str(getattr(e, "detail", "")) or f"HTTPException: {str(e)}",
+                    "status": int(getattr(e, "status_code", 500) or 500),
+                }
+            )
+            return default
+        except Exception as e:
+            errors.append(
+                {
+                    "key": key,
+                    "message": f"{type(e).__name__}: {str(e)}",
+                    "status": 500,
+                }
+            )
+            return default
+
+    market = safe_call("market", lambda: ops_market(market_id), {})
+
+    timeline = safe_call(
+        "timeline",
+        lambda: market_timeline(market_id, days=timeline_days),
+        [],
+    )
+
+    incidents = safe_call(
+        "incidents",
+        lambda: market_incidents(market_id, days=lookback_days),
+        [],
+    )
+
+    incident_events = safe_call(
+        "incident_events",
+        lambda: market_incident_events(market_id, days=lookback_days),
+        [],
+    )
+
+    incident_effectiveness_rows = safe_call(
+        "incident_effectiveness",
+        lambda: incident_effectiveness(
+            market_id,
+            days=min(lookback_days, INCIDENT_EFFECT_DAYS),
+            after_days=INCIDENT_AFTER_DAYS,
+        ),
+        [],
+    )
+
+    interventions = safe_call(
+        "interventions",
+        lambda: list_interventions_collapsed(market_id, days=lookback_days),
+        [],
+    )
+
+    interventions_effectiveness_rows = safe_call(
+        "interventions_effectiveness",
+        lambda: interventions_effectiveness(market_id, days=lookback_days),
+        [],
+    )
+
+    interventions_cumulative_row = safe_call(
+        "intervention_cumulative",
+        lambda: interventions_cumulative(market_id, days=lookback_days),
+        {
+            "days": lookback_days,
+            "count_total": 0,
+            "count_effective": 0,
+            "risk_score": 0.0,
+            "health_score": 0.0,
+            "spread_median": 0.0,
+            "depth_2pct_median": 0.0,
+        },
+    )
+
+    overrides = safe_call(
+        "overrides",
+        lambda: list_overrides(market_id, days=lookback_days),
+        [],
+    )
+
+    launch_intelligence = safe_call(
+        "launch_intelligence",
+        lambda: market_launch_intelligence(market_id),
+        {},
+    )
+
+    social_intelligence = safe_call(
+        "social_intelligence",
+        lambda: market_social_intelligence(market_id),
+        {},
+    )
+
+    alignment_intelligence = safe_call(
+        "alignment_intelligence",
+        lambda: market_alignment_intelligence(market_id),
+        {},
+    )
+
+    needs_social_refresh = (not social_intelligence) or market_needs_social_refresh(market_id)
+
+    if needs_social_refresh:
+        safe_call(
+            "social_refresh",
+            lambda: refresh_social_for_market(market_id),
+            {},
+        )
+
+        social_intelligence = safe_call(
+            "social_intelligence_post_refresh",
+            lambda: market_social_intelligence(market_id),
+            social_intelligence or {},
+        )
+
+        alignment_intelligence = safe_call(
+            "alignment_intelligence_post_refresh",
+            lambda: market_alignment_intelligence(market_id),
+            alignment_intelligence or {},
+        )
+
+    needs_structural_refresh = market_needs_structural_refresh(market_id)
+
+    if needs_structural_refresh:
+        safe_call(
+            "structural_refresh",
+            lambda: refresh_structural_for_market(market_id),
+            {},
+        )
+
+        market = safe_call(
+            "market_post_structural_refresh",
+            lambda: ops_market(market_id),
+            market or {},
+        )
+
+        launch_intelligence = safe_call(
+            "launch_intelligence_post_structural_refresh",
+            lambda: market_launch_intelligence(market_id),
+            launch_intelligence or {},
+        )
+
+        alignment_intelligence = safe_call(
+            "alignment_intelligence_post_structural_refresh",
+            lambda: market_alignment_intelligence(market_id),
+            alignment_intelligence or {},
+        )
+
+    if not alignment_intelligence and social_intelligence:
+        alignment_intelligence = {
+            "market_id": market_id,
+            "day": social_intelligence.get("day"),
+            "structural_state": "weak",
+            "social_state": social_intelligence.get("demand_state") or social_intelligence.get("recommendation") or "absent",
+            "alignment_state": "inactive",
+            "alignment_score": None,
+            "attention_vs_structure_gap": None,
+            "bottleneck_type": "structural_coverage_missing",
+            "summary": "External demand signal exists, but structural coverage is not yet available for this market.",
+            "flags": ["STRUCTURAL_COVERAGE_MISSING"],
+            "engine_version": "snapshot_fallback_alignment_v2",
+        }
+
+    if alignment_intelligence and errors:
+        errors = [
+            e for e in errors
+            if e.get("key") != "alignment_intelligence"
+        ]
+
+    score_diffs = safe_call(
+        "score_diffs",
+        lambda: build_market_score_diffs(market_id),
+        {},
+    )
+
+    # -----------------------------
+    # Rolling trader context
+    # -----------------------------
+    traders_summary = safe_call(
+        "traders_summary",
+        lambda: market_traders_summary(market_id, days=lookback_days, top_n=10),
+        [],
+    )
+
+    cohorts_summary = safe_call(
+        "cohorts_summary",
+        lambda: market_trader_cohorts_summary(market_id, days=lookback_days),
+        [],
+    )
+
+    trader_intelligence = safe_call(
+        "trader_intelligence",
+        lambda: market_trader_intelligence(market_id, days=lookback_days, top_n=50),
+        [],
+    )
+
+    # -----------------------------
+    # Same day trader context
+    # -----------------------------
+    same_day_traders_summary = safe_call(
+        "same_day_traders_summary",
+        lambda: market_traders_summary(market_id, days=1, top_n=10),
+        [],
+    )
+
+    same_day_cohorts_summary = safe_call(
+        "same_day_cohorts_summary",
+        lambda: market_trader_cohorts_summary(market_id, days=1),
+        [],
+    )
+
+    same_day_trader_intelligence = safe_call(
+        "same_day_trader_intelligence",
+        lambda: market_trader_intelligence(market_id, days=1, top_n=50),
+        [],
+    )
+
+    impact = safe_call(
+        "impact",
+        lambda: market_trader_impact(market_id, days=impact_days, anchor_day=None),
+        {
+            "window_days": impact_days,
+            "recent_window": {"start": "", "end": ""},
+            "prior_window": {"start": "", "end": ""},
+            "market_quality_delta": {
+                "spread_median_delta": 0.0,
+                "depth_2pct_delta": 0.0,
+                "concentration_hhi_delta": 0.0,
+                "unique_traders_delta": 0.0,
+                "health_score_delta": 0.0,
+            },
+            "recent_cohort_share": [],
+            "prior_cohort_share": [],
+            "cohort_share_delta": [],
+            "diagnosis": "STABLE",
+            "market_regime": "STABLE",
+            "cohort_risk_flags": ["COHORT_STRUCTURE_STABLE"],
+        },
+    )
+
+    recent_cohort_share = (impact or {}).get("recent_cohort_share") or []
+    recent_share_map = {
+        (row.get("cohort") or "").upper(): row
+        for row in recent_cohort_share
+    }
+
+    opportunity_summary = {
+        "structural_state": None,
+        "launch_state": None,
+        "social_state": None,
+        "summary": "No combined opportunity view available.",
+        "alignment": "unknown",
+        "signals": [],
+    }
+
+    if market:
+        structural_state = (
+            (market.get("integrity_band") or market.get("regime") or "unknown")
+            if isinstance(market, dict)
+            else "unknown"
+        )
+        launch_state = (
+            (launch_intelligence.get("recommendation") or "unknown")
+            if isinstance(launch_intelligence, dict) and launch_intelligence
+            else "unknown"
+        )
+        social_state = (
+            (social_intelligence.get("demand_state") or social_intelligence.get("recommendation") or "absent")
+            if isinstance(social_intelligence, dict) and social_intelligence
+            else "absent"
+        )
+
+        signals = []
+
+        # --- STRUCTURE ---
+        if structural_state == "healthy":
+            signals.append("structure_healthy")
+
+        elif structural_state == "forming":
+            signals.append("structure_forming")
+
+        elif structural_state == "fragile":
+            signals.append("structure_fragile")
+
+        elif structural_state == "weak":
+            signals.append("structure_weak")
+
+        # --- LAUNCH ---
+        if launch_state == "launch_ready":
+            signals.append("launch_ready")
+
+        elif launch_state == "monitor_then_launch":
+            signals.append("monitor_before_launch")
+
+        elif launch_state == "not_ready":
+            signals.append("not_launch_ready")
+
+        # --- DEMAND ---
+        if social_state == "strong":
+            signals.append("demand_strong")
+
+        elif social_state == "established":
+            signals.append("demand_established")
+
+        elif social_state == "building":
+            signals.append("demand_building")
+
+        elif social_state == "limited":
+            signals.append("demand_limited")
+
+        elif social_state == "absent":
+            signals.append("demand_absent")
+
+        # --- DEFAULT ALIGNMENT ---
+        alignment_state = "inactive"
+
+        # --- BUILD SUMMARY ---
+        opportunity_summary = {
+            "structural_state": structural_state,
+            "launch_state": launch_state,
+            "social_state": social_state,
+            "summary": "Market signals available.",
+            "alignment": alignment_state,
+            "signals": signals,
+        }
+
+        # --- ALIGNMENT (SAFE) ---
+        if isinstance(alignment_intelligence, dict) and alignment_intelligence:
+            alignment_state = alignment_intelligence.get("alignment_state") or "inactive"
+            opportunity_summary["alignment"] = alignment_state
+
+            # add alignment signal for downstream use
+            signals.append(f"alignment_{alignment_state}")
+
+        # --- SUMMARY LOGIC ---
+        if alignment_state == "confirmed":
+            opportunity_summary["summary"] = "Structure and demand reinforce each other."
+
+        elif alignment_state == "developing":
+            opportunity_summary["summary"] = "Market is forming in the right direction, but not yet fully validated."
+
+        elif alignment_state == "underdistributed":
+            opportunity_summary["summary"] = "Structure looks healthier than current external attention."
+
+        elif alignment_state == "overextended":
+            opportunity_summary["summary"] = "Demand is ahead of current market readiness."
+
+        elif alignment_state == "fragile":
+            opportunity_summary["summary"] = "Integrity or concentration issues reduce confidence in current market quality."
+
+        elif alignment_state == "inactive":
+            opportunity_summary["summary"] = "Both structure and demand remain weak or low priority."
+
+    if market:
+        market["recent_whale_notional_share"] = float(
+            (recent_share_map.get("WHALE") or {}).get("notional_share") or 0.0
+        )
+        market["recent_speculator_notional_share"] = float(
+            (recent_share_map.get("SPECULATOR") or {}).get("notional_share") or 0.0
+        )
+        market["recent_neutral_notional_share"] = float(
+            (recent_share_map.get("NEUTRAL") or {}).get("notional_share") or 0.0
+        )
+
+        market["recent_whale_trade_share"] = float(
+            (recent_share_map.get("WHALE") or {}).get("trade_share") or 0.0
+        )
+        market["recent_speculator_trade_share"] = float(
+            (recent_share_map.get("SPECULATOR") or {}).get("trade_share") or 0.0
+        )
+        market["recent_neutral_trade_share"] = float(
+            (recent_share_map.get("NEUTRAL") or {}).get("trade_share") or 0.0
+        )
+
+        market["role_share_interpretation"] = {
+            "latest_day": "Same day role shares from market integrity and radar.",
+            "recent_window": "Rolling cohort shares derived from the impact window.",
+        }
+
+    interventions_effectiveness_ui = {
+        "heat": {
+            "good_up": ["health_score", "depth_2pct_median", "unique_traders", "volume", "trades"],
+            "good_down": ["risk_score", "spread_median", "concentration_hhi"],
+            "steps": {
+                "risk_score": 1.0,
+                "health_score": 1.0,
+                "spread_median": 0.0005,
+                "depth_2pct_median": 250.0,
+                "unique_traders": 5.0,
+                "volume": 1000.0,
+                "trades": 10.0,
+                "concentration_hhi": 0.01,
+                "delta_score": 2.0,
+                "roi_score": 0.25,
+            },
+            "precision": {
+                "risk_score": 0,
+                "health_score": 0,
+                "spread_median": 5,
+                "depth_2pct_median": 0,
+                "unique_traders": 0,
+                "volume": 0,
+                "trades": 0,
+                "concentration_hhi": 3,
+                "delta_score": 2,
+                "roi_score": 2,
+            },
+        }
+    }
+
+    anchor_day = (market or {}).get("day")
+
+    if market:
+        latest_whale_share = float((market or {}).get("whale_role_share") or 0.0)
+        latest_speculator_share = float((market or {}).get("speculator_role_share") or 0.0)
+        latest_neutral_share = float((market or {}).get("neutral_role_share") or 0.0)
+
+        recent_whale_share = float((market or {}).get("recent_whale_notional_share") or 0.0)
+        recent_speculator_share = float((market or {}).get("recent_speculator_notional_share") or 0.0)
+        recent_neutral_share = float((market or {}).get("recent_neutral_notional_share") or 0.0)
+
+        divergence_flags: List[str] = []
+
+        if (
+            (latest_whale_share <= 0.05 and recent_whale_share >= 0.15)
+            or (latest_speculator_share <= 0.05 and recent_speculator_share >= 0.15)
+            or ((latest_neutral_share - recent_neutral_share) >= 0.20)
+        ):
+            divergence_flags.append("LATEST_DAY_VS_RECENT_WINDOW_DIVERGENCE")
+
+        if latest_whale_share <= 0.05 and recent_whale_share >= 0.15:
+            divergence_flags.append("RECENT_WHALE_PARTICIPATION_PRESENT")
+
+        if latest_speculator_share <= 0.05 and recent_speculator_share >= 0.15:
+            divergence_flags.append("RECENT_SPECULATIVE_FLOW_PRESENT")
+
+        if (latest_neutral_share - recent_neutral_share) >= 0.20:
+            divergence_flags.append("NEUTRAL_SHARE_WEAKER_IN_RECENT_WINDOW")
+
+        if divergence_flags:
+            divergence_summary_parts: List[str] = []
+
+            if "RECENT_WHALE_PARTICIPATION_PRESENT" in divergence_flags:
+                divergence_summary_parts.append("recent whale participation is meaningful")
+
+            if "RECENT_SPECULATIVE_FLOW_PRESENT" in divergence_flags:
+                divergence_summary_parts.append("recent speculative flow is meaningful")
+
+            if "NEUTRAL_SHARE_WEAKER_IN_RECENT_WINDOW" in divergence_flags:
+                divergence_summary_parts.append("recent neutral participation is weaker than the latest day view")
+
+            market["structural_divergence"] = {
+                "has_divergence": True,
+                "flags": divergence_flags,
+                "summary": (
+                    "Latest day appears more neutral than the recent window. "
+                    + "; ".join(divergence_summary_parts)
+                    + "."
+                ),
+                "latest_day": {
+                    "whale_role_share": latest_whale_share,
+                    "speculator_role_share": latest_speculator_share,
+                    "neutral_role_share": latest_neutral_share,
+                },
+                "recent_window": {
+                    "whale_notional_share": recent_whale_share,
+                    "speculator_notional_share": recent_speculator_share,
+                    "neutral_notional_share": recent_neutral_share,
+                },
+            }
+        else:

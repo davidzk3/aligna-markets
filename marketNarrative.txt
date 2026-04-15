@@ -1,0 +1,356 @@
+export type NarrativeInputs = {
+  structuralState?: string | null;
+  socialState?: string | null;
+  alignmentState?: string | null;
+  participationQuality?: number | null;
+  liquidityDurability?: number | null;
+  concentrationHHI?: number | null;
+  whaleShare?: number | null;
+  speculativeShare?: number | null;
+  flags?: string[] | null;
+  isSocialDemo?: boolean;
+};
+
+export type DisplayStructuralState =
+  | "strong"
+  | "moderate"
+  | "weak"
+  | "developing"
+  | null;
+
+export type DisplaySocialState =
+  | "strong"
+  | "established"
+  | "building"
+  | "limited"
+  | "absent"
+  | null;
+
+export type DisplayAlignmentState =
+  | "confirmed"
+  | "developing"
+  | "underdistributed"
+  | "overextended"
+  | "fragile"
+  | "inactive"
+  | "balanced"
+  | null;
+
+export function mapStructuralLabel(value?: string | null): DisplayStructuralState {
+  switch (value) {
+    case "strong":
+    case "healthy":
+    case "ready":
+      return "strong";
+    case "moderate":
+    case "forming":
+      return "moderate";
+    case "weak":
+    case "fragile":
+      return "weak";
+    case "developing":
+      return "developing";
+    default:
+      return null;
+  }
+}
+
+export function mapSocialLabel(value?: string | null): DisplaySocialState {
+  switch (value) {
+    case "strong":
+      return "strong";
+    case "established":
+      return "established";
+    case "building":
+    case "rising":
+      return "building";
+    case "limited":
+    case "watch":
+    case "weak":
+      return "limited";
+    case "absent":
+      return "absent";
+    default:
+      return null;
+  }
+}
+
+export function mapAlignmentLabel(value?: string | null): DisplayAlignmentState {
+  switch (value) {
+    case "confirmed":
+      return "confirmed";
+    case "developing":
+      return "developing";
+    case "underdistributed":
+      return "underdistributed";
+    case "overextended":
+      return "overextended";
+    case "fragile":
+      return "fragile";
+    case "inactive":
+      return "inactive";
+    case "balanced":
+      return "balanced";
+    default:
+      return null;
+  }
+}
+
+function uniqueStrings(values: Array<string | null | undefined>): string[] {
+  return Array.from(new Set(values.filter((v): v is string => Boolean(v))));
+}
+
+export function mapFlagLabel(flag: string): string {
+  switch (flag) {
+    case "STRONG_NEUTRAL_BASE":
+      return "strong neutral base";
+
+    case "DEMAND_STRONG":
+      return "demand strong";
+    case "DEMAND_ESTABLISHED":
+      return "demand established";
+    case "DEMAND_BUILDING":
+      return "demand building";
+    case "DEMAND_LIMITED":
+      return "demand limited";
+    case "DEMAND_ABSENT":
+      return "demand absent";
+
+    case "DEMAND_AHEAD_OF_STRUCTURE":
+      return "demand ahead of structure";
+    case "DEMAND_LAGGING_STRUCTURE":
+      return "demand lagging structure";
+    case "STRUCTURE_DEMAND_CONFIRMED":
+      return "structure demand confirmed";
+    case "LARGE_ALIGNMENT_GAP":
+      return "large alignment gap";
+
+    case "RECENT_WHALE_PARTICIPATION_PRESENT":
+      return "recent whale participation";
+    case "RECENT_SPECULATIVE_FLOW_PRESENT":
+      return "recent speculative flow";
+    case "NEUTRAL_SHARE_WEAKER_IN_RECENT_WINDOW":
+      return "neutral share weaker recently";
+    case "LATEST_DAY_VS_RECENT_WINDOW_DIVERGENCE":
+      return "latest day vs recent window divergence";
+
+    case "LOW_CONFIDENCE_PROXY":
+      return "low confidence proxy";
+    case "SOURCE_CONCENTRATION_RISK":
+      return "source concentration risk";
+
+    default:
+      return flag.toLowerCase().replace(/_/g, " ");
+  }
+}
+
+export function mapFlagsForDemo(flags?: string[] | null): string[] {
+  if (!flags || flags.length === 0) return [];
+  return uniqueStrings(flags.map(mapFlagLabel));
+}
+
+export function deriveParticipantFlags(params: {
+  neutralShare?: number | null;
+  whaleShare?: number | null;
+  speculativeShare?: number | null;
+  participationQuality?: number | null;
+}): string[] {
+  const {
+    neutralShare = null,
+    whaleShare = null,
+    speculativeShare = null,
+    participationQuality = null,
+  } = params;
+
+  const out: string[] = [];
+
+  if (
+    neutralShare !== null &&
+    whaleShare !== null &&
+    speculativeShare !== null &&
+    neutralShare >= 0.7 &&
+    whaleShare <= 0.2 &&
+    speculativeShare <= 0.15
+  ) {
+    out.push("healthy neutral base");
+  }
+
+  if (whaleShare !== null && whaleShare >= 0.3) {
+    out.push("elevated whale share");
+  }
+
+  if (speculativeShare !== null && speculativeShare >= 0.25) {
+    out.push("elevated speculative share");
+  }
+
+  if (participationQuality !== null && participationQuality < 0.5) {
+    out.push("weak participation quality");
+  }
+
+  return uniqueStrings(out);
+}
+
+export function deriveDisplayStructuralState(params: {
+  structuralScore?: number | null;
+  participationQuality?: number | null;
+  liquidityDurability?: number | null;
+  concentrationHHI?: number | null;
+  fallbackState?: string | null;
+}): DisplayStructuralState {
+  const {
+    structuralScore = null,
+    participationQuality = null,
+    liquidityDurability = null,
+    concentrationHHI = null,
+    fallbackState = null,
+  } = params;
+
+  if (structuralScore !== null) {
+    if (
+      structuralScore >= 0.7 &&
+      (participationQuality === null || participationQuality >= 0.65) &&
+      (liquidityDurability === null || liquidityDurability >= 0.55) &&
+      (concentrationHHI === null || concentrationHHI < 0.15)
+    ) {
+      return "strong";
+    }
+
+    if (structuralScore < 0.45) {
+      return "weak";
+    }
+
+    return "moderate";
+  }
+
+  return mapStructuralLabel(fallbackState);
+}
+
+export function buildDecisionSummary(params: NarrativeInputs): string {
+  const alignment = mapAlignmentLabel(params.alignmentState);
+  const structural = mapStructuralLabel(params.structuralState);
+  const social = mapSocialLabel(params.socialState);
+
+  if (alignment === "confirmed") {
+    return "Market structure and external demand are reinforcing each other.";
+  }
+
+  if (alignment === "developing") {
+    return "Structure and demand are beginning to reinforce each other, but the market is not fully validated yet.";
+  }
+
+  if (alignment === "underdistributed") {
+    return "Market structure looks healthier than current external attention.";
+  }
+
+  if (alignment === "overextended") {
+    return "External demand is ahead of current market readiness.";
+  }
+
+  if (alignment === "fragile") {
+    return "Current activity should be read cautiously because structural quality remains fragile.";
+  }
+
+  if (alignment === "inactive") {
+    return "Both structure and external demand are currently weak.";
+  }
+
+  if (alignment === "balanced") {
+    return "Structure and demand are reasonably aligned, but without a strong reinforcing signal yet.";
+  }
+
+  if (structural === "strong" && (social === "absent" || social === "limited")) {
+    return "Structure looks healthy, but external demand remains limited.";
+  }
+
+  if ((structural === "weak" || structural === "developing") && social === "strong") {
+    return "Demand is visible, but structure is not yet robust enough to fully support it.";
+  }
+
+  if (structural || social) {
+    return "Structure and demand signals are mixed and should be read together.";
+  }
+
+  return "No combined structure and demand view is available yet.";
+}
+
+export function buildCardCommentary(params: NarrativeInputs): string {
+  const alignment = mapAlignmentLabel(params.alignmentState);
+  const structural = mapStructuralLabel(params.structuralState);
+  const social = mapSocialLabel(params.socialState);
+
+  if (alignment === "confirmed") {
+    return "Structure and demand are reinforcing each other.";
+  }
+
+  if (alignment === "developing") {
+    return "Structure and demand are starting to reinforce each other.";
+  }
+
+  if (alignment === "underdistributed") {
+    return "Healthy structure with lagging external demand.";
+  }
+
+  if (alignment === "overextended") {
+    return "Demand is ahead of current market readiness.";
+  }
+
+  if (alignment === "fragile") {
+    return "Demand exists, but structural quality remains fragile.";
+  }
+
+  if (alignment === "inactive") {
+    return "Both structure and demand are currently weak.";
+  }
+
+  if (alignment === "balanced") {
+    return "Structure and demand are reasonably aligned.";
+  }
+
+  if (structural === "strong" && social === "strong") {
+    return "Strong structure with strong demand.";
+  }
+
+  if (structural === "strong" && (social === "limited" || social === "absent")) {
+    return "Healthy structure with limited external demand.";
+  }
+
+  if ((structural === "weak" || structural === "developing") && social === "strong") {
+    return "Demand is present, but structure remains behind it.";
+  }
+
+  return "Mixed structure and demand signals.";
+}
+
+export function formatDisplaySignals(params: {
+  structuralState?: string | null;
+  socialState?: string | null;
+}): string {
+  const structural = mapStructuralLabel(params.structuralState);
+  const social = mapSocialLabel(params.socialState);
+
+  const structuralLabel =
+    structural === "strong"
+      ? "strong structure"
+      : structural === "moderate"
+      ? "moderate structure"
+      : structural === "weak"
+      ? "weak structure"
+      : structural === "developing"
+      ? "developing structure"
+      : "unknown structure";
+
+  const socialLabel =
+    social === "strong"
+      ? "strong demand"
+      : social === "established"
+      ? "established demand"
+      : social === "building"
+      ? "building demand"
+      : social === "limited"
+      ? "limited demand"
+      : social === "absent"
+      ? "no demand signal"
+      : "unknown demand";
+
+  return `${structuralLabel}, ${socialLabel}`;
+}

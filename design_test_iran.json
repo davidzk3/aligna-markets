@@ -1,0 +1,8 @@
+﻿{
+  "title": "Will Iran strike Israel on March 10?",
+  "description": "This market will resolve to \"Yes\" if Iran initiates a drone, missile, or air strike on Israel’s soil on the listed date in Israel Time (GMT+2). Otherwise, this market will resolve to \"No\". For the purposes of this market, a qualifying strike is defined as the use of aerial bombs, drones, or missiles launched by Iranian military forces that impact Israeli ground territory. A strike on any area within the terrestrial territory of Israel counts. Strikes within the West Bank or the Gaza Strip will not count as Israel. Only military actions explicitly claimed by the Islamic Republic of Iran, or confirmed to have originated from Iranian territory will count. Attacks by proxy forces such as Hezbollah or the Houthis will not count. Missiles or drones that are intercepted and surface-to-air missile strikes will not be sufficient for a Yes resolution. Actions such as artillery fire, small arms fire, FPV or ATGM strikes, ground incursions, naval shelling, cyberattacks, or other operations conducted by Iranian ground operatives will not qualify. The primary resolution source will be official government or military statements, multilateral bodies, or a consensus of credible reporting from major international media and national broadcasters. If the date or time of a strike cannot be confirmed by a consensus of credible reporting within 48 hours of this market's end date, it will resolve to No regardless of whether a strike was later confirmed to have taken place.",
+  "category": "geopolitics",
+  "market_type": "event_binary",
+  "protocol": "polymarket",
+  "oracle_family": "uma_oo"
+}

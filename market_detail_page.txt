@@ -1,0 +1,783 @@
+import Link from "next/link";
+import SectionCard from "@/components/SectionCard";
+import KeyValueTable from "@/components/KeyValueTable";
+import { getMarketSnapshot } from "@/lib/api";
+import { formatPercent01, formatMetricValue } from "@/lib/format";
+import {
+  deriveDisplayStructuralState,
+  deriveParticipantFlags,
+  formatDisplaySignals,
+  mapFlagsForDemo,
+} from "@/lib/marketNarrative";
+
+type PageProps = {
+  params: Promise<{
+    marketId: string;
+  }>;
+  searchParams: Promise<{
+    title?: string;
+    url?: string;
+  }>;
+};
+
+type CohortItem = {
+  cohort?: string;
+  traders?: number;
+  unique_traders?: number;
+  trader_count?: number;
+  trades?: number;
+  trade_count?: number;
+  notional_total?: number;
+  notional?: number;
+  avg_trade_size?: number;
+  average_trade_size?: number;
+};
+
+function getStatusPillClass(
+  value?: string | null,
+  type?: "structural" | "social" | "alignment",
+  emphasis?: "primary" | "secondary"
+) {
+  if (type === "alignment") {
+    switch (value) {
+      case "confirmed":
+        return emphasis === "primary"
+          ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200"
+          : "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100";
+      case "developing":
+        return emphasis === "primary"
+          ? "bg-indigo-100 text-indigo-800 ring-1 ring-indigo-200"
+          : "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100";
+      case "underdistributed":
+        return emphasis === "primary"
+          ? "bg-sky-100 text-sky-800 ring-1 ring-sky-200"
+          : "bg-sky-50 text-sky-700 ring-1 ring-sky-100";
+      case "overextended":
+        return emphasis === "primary"
+          ? "bg-amber-100 text-amber-800 ring-1 ring-amber-200"
+          : "bg-amber-50 text-amber-700 ring-1 ring-amber-100";
+      case "fragile":
+        return emphasis === "primary"
+          ? "bg-rose-100 text-rose-800 ring-1 ring-rose-200"
+          : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
+      case "inactive":
+        return emphasis === "primary"
+          ? "bg-zinc-200 text-zinc-800 ring-1 ring-zinc-300"
+          : "bg-zinc-100 text-zinc-700 ring-1 ring-zinc-200";
+      default:
+        return "bg-zinc-100 text-zinc-700 ring-1 ring-zinc-200";
+    }
+  }
+
+  if (type === "social") {
+    switch (value) {
+      case "strong":
+        return "bg-violet-200 text-violet-900 ring-1 ring-violet-300";
+      case "established":
+        return "bg-violet-100 text-violet-800 ring-1 ring-violet-200";
+      case "building":
+        return "bg-purple-100 text-purple-800 ring-1 ring-purple-200";
+      case "limited":
+        return "bg-fuchsia-100 text-fuchsia-800 ring-1 ring-fuchsia-200";
+      case "absent":
+        return "bg-zinc-100 text-zinc-500 ring-1 ring-zinc-200";
+      default:
+        return "bg-zinc-100 text-zinc-700 ring-1 ring-zinc-200";
+    }
+  }
+
+  switch (value) {
+    case "healthy":
+      return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100";
+    case "forming":
+      return "bg-amber-50 text-amber-700 ring-1 ring-amber-100";
+    case "fragile":
+      return "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
+    case "weak":
+      return "bg-zinc-100 text-zinc-700 ring-1 ring-zinc-200";
+    default:
+      return "bg-zinc-100 text-zinc-700 ring-1 ring-zinc-200";
+  }
+}
+
+function StatusPill({
+  label,
+  value,
+  type = "structural",
+  emphasis = "secondary",
+}: {
+  label: string;
+  value?: string | null;
+  type?: "structural" | "social" | "alignment";
+  emphasis?: "primary" | "secondary";
+}) {
+  if (!value) return null;
+
+  const sizeClass =
+    emphasis === "primary"
+      ? "h-10 rounded-xl px-4 text-sm font-semibold"
+      : "h-8 rounded-lg px-3 text-xs font-medium";
+
+  return (
+    <span
+      className={`inline-flex items-center whitespace-nowrap ${sizeClass} ${getStatusPillClass(
+        value,
+        type,
+        emphasis
+      )}`}
+    >
+      {label}: {value}
+    </span>
+  );
+}
+
+function asCohortArray(value: unknown): CohortItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (item): item is CohortItem => typeof item === "object" && item !== null
+  );
+}
+
+function normalizeCohortName(value: string): string {
+  const v = value.toLowerCase();
+  if (v === "speculator") return "speculative";
+  return v;
+}
+
+function normalizeDemandState(value?: string | null): string {
+  switch (value) {
+    case "strong":
+      return "strong";
+    case "established":
+      return "established";
+    case "building":
+      return "building";
+    case "limited":
+      return "limited";
+    case "absent":
+      return "absent";
+
+    // backward compatibility
+    case "high":
+      return "strong";
+    case "rising":
+      return "building";
+    case "forming":
+    case "watch":
+    case "moderate":
+      return "limited";
+    case "low":
+    case "weak":
+    default:
+      return "absent";
+  }
+}
+
+function alignmentExplanation(
+  alignmentState?: string | null,
+  structuralState?: string | null,
+  demandState?: string | null,
+  summary?: string | null
+): string {
+  if (summary) return summary;
+
+  switch (alignmentState) {
+    case "confirmed":
+      return "Structure and external demand reinforce each other.";
+    case "developing":
+      return "The market is moving in the right direction, but alignment is still forming.";
+    case "underdistributed":
+      return "Structure looks healthier than current external attention.";
+    case "overextended":
+      return "Demand is ahead of current market readiness.";
+    case "fragile":
+      return "Price discovery is vulnerable because integrity or concentration issues weaken the market.";
+    case "inactive":
+      return "Both structure and demand are currently weak.";
+    default:
+      return `Structure is ${structuralState || "unknown"} while demand is ${demandState || "unknown"}.`;
+  }
+}
+
+function alignmentBottleneckLabel(alignmentState?: string | null, raw?: string | null) {
+  if (raw) return raw;
+  switch (alignmentState) {
+    case "overextended":
+      return "structure";
+    case "underdistributed":
+      return "demand";
+    case "fragile":
+      return "integrity";
+    case "inactive":
+      return "both sides weak";
+    default:
+      return "—";
+  }
+}
+
+function mergeCohorts(
+  sameDayValue: unknown,
+  rollingWindowValue: unknown
+): Map<string, { traders: number; trades: number; notional: number; avgTradeSize: number }> {
+  const combined = [
+    ...asCohortArray(sameDayValue),
+    ...asCohortArray(rollingWindowValue),
+  ];
+
+  const merged = new Map<
+    string,
+    { traders: number; trades: number; notional: number; avgTradeSize: number }
+  >();
+
+  for (const item of combined) {
+    const cohortRaw = item.cohort || "unknown";
+    const cohort = normalizeCohortName(String(cohortRaw));
+
+    const traders =
+      Number(item.traders ?? item.unique_traders ?? item.trader_count ?? 0) || 0;
+
+    const trades = Number(item.trades ?? item.trade_count ?? 0) || 0;
+
+    const notional =
+      Number(item.notional_total ?? item.notional ?? 0) || 0;
+
+    const avgTradeSize =
+      Number(item.avg_trade_size ?? item.average_trade_size ?? 0) || 0;
+
+    const current = merged.get(cohort) || {
+      traders: 0,
+      trades: 0,
+      notional: 0,
+      avgTradeSize: 0,
+    };
+
+    current.traders = Math.max(current.traders, traders);
+    current.trades = Math.max(current.trades, trades);
+    current.notional = Math.max(current.notional, notional);
+    current.avgTradeSize = Math.max(current.avgTradeSize, avgTradeSize);
+
+    merged.set(cohort, current);
+  }
+
+  return merged;
+}
+
+function formatCohortSummary(
+  merged: Map<string, { traders: number; trades: number; notional: number; avgTradeSize: number }>
+): string {
+  if (merged.size === 0) return "—";
+
+  const ordered = Array.from(merged.entries()).sort((a, b) => {
+    const sizeDiff = b[1].avgTradeSize - a[1].avgTradeSize;
+    if (sizeDiff !== 0) return sizeDiff;
+    return b[1].traders - a[1].traders;
+  });
+
+  return ordered
+    .map(([cohort, stats]) => {
+      const traders = stats.traders.toLocaleString();
+      const avgSize = stats.avgTradeSize.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+      });
+      return `${cohort}: ${traders} traders, avg size ${avgSize}`;
+    })
+    .join(" • ");
+}
+
+function cohortShare(
+  merged: Map<string, { traders: number; trades: number; notional: number; avgTradeSize: number }>,
+  cohortName: string
+): number | null {
+  const totalTraders = Array.from(merged.values()).reduce(
+    (sum, item) => sum + item.traders,
+    0
+  );
+
+  if (totalTraders <= 0) return null;
+
+  const cohort = merged.get(cohortName);
+  if (!cohort) return 0;
+
+  return cohort.traders / totalTraders;
+}
+
+export default async function MarketDetailPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const { marketId } = await params;
+  const resolvedSearchParams = await searchParams;
+
+  let snapshot: any;
+  let error: string | null = null;
+
+  try {
+    snapshot = await getMarketSnapshot(marketId);
+  } catch (err) {
+    error = err instanceof Error ? err.message : "Failed to load market snapshot";
+  }
+
+  if (error || !snapshot) {
+    return (
+      <div className="mx-auto max-w-5xl space-y-4">
+        <Link href="/" className="text-sm font-medium text-blue-600 hover:underline">
+          ← Back to overview
+        </Link>
+
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700">
+          {error || "Unable to load market snapshot"}
+        </div>
+      </div>
+    );
+  }
+
+  const market = snapshot.market || {};
+  const social = snapshot.social_intelligence || {};
+  const alignment = snapshot.alignment_intelligence || {};
+  const launch = snapshot.launch_intelligence || {};
+  const sameDay = snapshot.traders?.same_day || {};
+  const rollingWindow = snapshot.traders?.rolling_window || {};
+  const snapshotMeta = snapshot.snapshot_meta || {};
+
+  const structuralDay = snapshotMeta.structural_day || market.day || null;
+  const socialDay = snapshotMeta.social_day || social.day || null;
+  const alignmentDay = snapshotMeta.alignment_day || alignment.day || null;
+
+  const displayTitle = market.title || resolvedSearchParams.title || marketId;
+  const displayUrl = market.url || resolvedSearchParams.url || "";
+
+  const participationQuality =
+    launch.participation_quality_score !== null &&
+    launch.participation_quality_score !== undefined &&
+    !Number.isNaN(Number(launch.participation_quality_score))
+      ? Number(launch.participation_quality_score)
+      : null;
+
+  const liquidityDurability =
+    launch.liquidity_durability_score !== null &&
+    launch.liquidity_durability_score !== undefined &&
+    !Number.isNaN(Number(launch.liquidity_durability_score))
+      ? Number(launch.liquidity_durability_score)
+      : null;
+
+  const concentrationHHI =
+    market.concentration_hhi !== null &&
+    market.concentration_hhi !== undefined &&
+    !Number.isNaN(Number(market.concentration_hhi))
+      ? Number(market.concentration_hhi)
+      : null;
+
+  const structuralScore =
+    market.market_quality_score !== null &&
+    market.market_quality_score !== undefined &&
+    !Number.isNaN(Number(market.market_quality_score))
+      ? Number(market.market_quality_score)
+      : launch.launch_readiness_score !== null &&
+        launch.launch_readiness_score !== undefined &&
+        !Number.isNaN(Number(launch.launch_readiness_score))
+      ? Number(launch.launch_readiness_score)
+      : null;
+
+  const structuralRisk =
+    market.concentration_risk_score !== null &&
+    market.concentration_risk_score !== undefined &&
+    !Number.isNaN(Number(market.concentration_risk_score))
+      ? Number(market.concentration_risk_score)
+      : launch.launch_risk_score !== null &&
+        launch.launch_risk_score !== undefined &&
+        !Number.isNaN(Number(launch.launch_risk_score))
+      ? Number(launch.launch_risk_score)
+      : null;
+
+  const structuralState =
+    deriveDisplayStructuralState({
+      structuralScore,
+      participationQuality,
+      liquidityDurability,
+      concentrationHHI,
+      fallbackRecommendation: market.regime ?? launch.recommendation ?? null,
+    }) || alignment.structural_state || "unknown";
+
+  const socialState = normalizeDemandState(
+    social.demand_state ?? social.recommendation ?? alignment.social_state ?? null
+  );
+
+  const alignmentState = alignment.alignment_state || "inactive";
+
+  const mergedCohorts = mergeCohorts(
+    sameDay.cohorts_summary,
+    rollingWindow.cohorts_summary
+  );
+
+  const combinedCohorts = formatCohortSummary(mergedCohorts);
+
+  const neutralShare = cohortShare(mergedCohorts, "neutral");
+  const whaleShare = cohortShare(mergedCohorts, "whale");
+  const speculativeShare = cohortShare(mergedCohorts, "speculative");
+
+  const totalTraders = Array.from(mergedCohorts.values()).reduce(
+    (sum, item) => sum + item.traders,
+    0
+  );
+
+  const totalTrades = Array.from(mergedCohorts.values()).reduce(
+    (sum, item) => sum + item.trades,
+    0
+  );
+
+  const totalVolume = Array.from(mergedCohorts.values()).reduce(
+    (sum, item) => sum + item.notional,
+    0
+  );
+
+  const formattedTotalTraders =
+    totalTraders > 0 ? totalTraders.toLocaleString() : "Not available";
+
+  const formattedTotalTrades =
+    totalTrades > 0 ? totalTrades.toLocaleString() : "Not available";
+
+  const formattedTotalVolume =
+    totalVolume > 0
+      ? totalVolume.toLocaleString(undefined, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        })
+      : "Not available";
+
+  const participantFlags = deriveParticipantFlags({
+    neutralShare,
+    whaleShare,
+    speculativeShare,
+    participationQuality,
+  });
+
+  const alignmentInterpretation = alignmentExplanation(
+    alignmentState,
+    structuralState,
+    socialState,
+    alignment.summary
+  );
+
+  const displaySignals = formatDisplaySignals({
+    structuralState,
+    socialState,
+  });
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-8">
+      <div>
+        <Link href="/" className="text-sm font-medium text-blue-600 hover:underline">
+          ← Back to overview
+        </Link>
+      </div>
+
+      <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <p className="text-sm font-medium text-zinc-500">Market Detail</p>
+
+        <div className="mt-1 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-zinc-900">{displayTitle}</h1>
+
+            <p className="mt-2 text-sm text-zinc-600">
+              {market.protocol || "—"} · {market.chain || "—"}
+            </p>
+
+            {displayUrl ? (
+              <div className="mt-3">
+                <a
+                  href={displayUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm font-medium text-blue-600 hover:underline"
+                >
+                  Open external market
+                </a>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="flex flex-col items-end gap-2">
+            <div className="group relative">
+              <StatusPill
+                label="alignment"
+                value={alignmentState}
+                type="alignment"
+                emphasis="primary"
+              />
+
+              <div className="absolute right-0 top-12 z-20 hidden w-72 rounded-xl border border-zinc-200 bg-white p-3 text-xs text-zinc-600 shadow-lg group-hover:block">
+                <p className="font-semibold text-zinc-900">Alignment</p>
+                <p className="mt-1 text-zinc-600">
+                  How well market structure and external demand agree.
+                </p>
+                <div className="mt-2 space-y-1">
+                  <p>
+                    <span className="font-medium text-zinc-900">confirmed</span> → structure and demand reinforce each other
+                  </p>
+                  <p>
+                    <span className="font-medium text-zinc-900">developing</span> → the market is moving in the right direction, but not yet fully validated
+                  </p>
+                  <p>
+                    <span className="font-medium text-zinc-900">underdistributed</span> → structure looks healthier than current external attention
+                  </p>
+                  <p>
+                    <span className="font-medium text-zinc-900">overextended</span> → demand is ahead of current market readiness
+                  </p>
+                  <p>
+                    <span className="font-medium text-zinc-900">fragile</span> → integrity or concentration issues weaken price discovery
+                  </p>
+                  <p>
+                    <span className="font-medium text-zinc-900">inactive</span> → both structure and demand are currently weak
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap justify-end gap-2">
+              <StatusPill
+                label="structural"
+                value={structuralState}
+                type="structural"
+              />
+              <StatusPill
+                label="demand"
+                value={socialState}
+                type="social"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-3">
+          <p className="max-w-3xl text-sm text-zinc-600">
+            Alignment compares market structure and external demand to show whether a market is confirmed, still developing, underdistributed, overextended, fragile, or inactive.
+          </p>
+
+          <div className="flex flex-wrap gap-2 text-xs">
+            {structuralDay && (
+              <span className="rounded-md bg-zinc-100 px-2 py-1 text-zinc-600">
+                Structural day: {structuralDay}
+              </span>
+            )}
+
+            {socialDay && (
+              <span className="rounded-md bg-violet-50 px-2 py-1 text-violet-700">
+                Social day: {socialDay}
+              </span>
+            )}
+
+            {alignmentDay && (
+              <span className="rounded-md bg-sky-50 px-2 py-1 text-sky-700">
+                Alignment day: {alignmentDay}
+              </span>
+            )}
+          </div>
+
+          {snapshot.is_mixed_horizon && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+              Mixed horizon: structure and demand signals are from different dates
+            </div>
+          )}
+        </div>
+      </section>
+
+      <SectionCard
+        title={`Decision Summary${
+          structuralDay || socialDay
+            ? ` (structural: ${structuralDay ?? "—"}, social: ${socialDay ?? "—"})`
+            : ""
+        }`}
+      >
+        <p className="mb-4 text-xs italic text-zinc-500">
+          High-level interpretation of structural quality, external demand signal, and overall alignment
+        </p>
+
+        <KeyValueTable
+          rows={[
+            { label: "Structural State", value: structuralState || "—" },
+            { label: "Demand State", value: socialState || "—" },
+            { label: "Alignment State", value: alignmentState || "—" },
+            {
+              label: "Alignment Score",
+              value: formatMetricValue(alignment.alignment_score),
+            },
+            {
+              label: "Attention vs Structure Gap",
+              value: formatMetricValue(alignment.attention_vs_structure_gap),
+            },
+            {
+              label: "Interpretation",
+              value: alignmentInterpretation,
+            },
+            {
+              label: "Structure vs Demand",
+              value: `structure: ${structuralState || "unknown"} · demand: ${socialState || "unknown"}`,
+            },
+            {
+              label: "Bottleneck",
+              value: alignmentBottleneckLabel(
+                alignmentState,
+                alignment.bottleneck_type
+              ),
+            },
+            {
+              label: "Key Signals",
+              value: displaySignals,
+            },
+            {
+              label: "Flags",
+              value: mapFlagsForDemo(alignment.flags).join(", ") || "—",
+            },
+          ]}
+        />
+      </SectionCard>
+
+      <div className="grid gap-8 xl:grid-cols-2">
+        <SectionCard
+          title={`Structural Health${structuralDay ? ` (as of ${structuralDay})` : ""}`}
+        >
+          <p className="mb-4 text-xs italic text-zinc-500">
+            Structural strength here reflects liquidity quality, participation quality, concentration, and durability
+          </p>
+
+          <KeyValueTable
+            rows={[
+              { label: "Integrity Band", value: market.integrity_band || "—" },
+              { label: "Review Priority", value: market.review_priority || "—" },
+              { label: "Spread Median", value: formatMetricValue(market.spread_median) },
+              { label: "Depth 2pct Median", value: formatMetricValue(market.depth_2pct_median) },
+              { label: "Concentration HHI", value: formatMetricValue(market.concentration_hhi) },
+              { label: "Structural Score", value: formatMetricValue(structuralScore) },
+              { label: "Structural Risk", value: formatMetricValue(structuralRisk) },
+              { label: "Liquidity Durability", value: formatMetricValue(liquidityDurability) },
+              { label: "Participation Quality", value: formatMetricValue(participationQuality) },
+              {
+                label: "Flags",
+                value: mapFlagsForDemo(market.flags).join(", ") || "—",
+              },
+            ]}
+          />
+        </SectionCard>
+
+        <SectionCard
+          title={`Demand Signals${socialDay ? ` (as of ${socialDay})` : ""}`}
+        >
+          <p className="mb-4 text-xs italic text-violet-600">
+            External attention and demand signals derived from live social ingestion
+          </p>
+
+          <KeyValueTable
+            rows={[
+              { label: "Demand State", value: socialState || "—" },
+              { label: "Summary", value: social.summary || "—" },
+              { label: "Attention Score", value: formatMetricValue(social.attention_score) },
+              { label: "Demand Score", value: formatMetricValue(social.demand_score) },
+              { label: "Sentiment Score", value: formatMetricValue(social.sentiment_score) },
+              { label: "Trend Velocity", value: formatMetricValue(social.trend_velocity) },
+              { label: "Confidence Score", value: formatMetricValue(social.confidence_score) },
+              { label: "Mention Count", value: formatMetricValue(social.mention_count) },
+              { label: "Source Count", value: formatMetricValue(social.source_count) },
+              {
+                label: "Flags",
+                value: mapFlagsForDemo(social.flags).join(", ") || "—",
+              },
+            ]}
+          />
+        </SectionCard>
+      </div>
+
+      <SectionCard
+        title={`Alignment Intelligence${alignmentDay ? ` (as of ${alignmentDay})` : ""}`}
+      >
+        <p className="mb-4 text-xs italic text-zinc-500">
+          This section explains why the market is currently confirmed, developing, underdistributed, overextended, fragile, or inactive.
+        </p>
+
+        <KeyValueTable
+          rows={[
+            { label: "Alignment State", value: alignmentState || "—" },
+            { label: "Interpretation", value: alignmentInterpretation },
+            {
+              label: "Structure vs Demand",
+              value: `structure: ${structuralState || "unknown"} · demand: ${socialState || "unknown"}`,
+            },
+            {
+              label: "Bottleneck",
+              value: alignmentBottleneckLabel(
+                alignmentState,
+                alignment.bottleneck_type
+              ),
+            },
+            {
+              label: "Alignment Score",
+              value: formatMetricValue(alignment.alignment_score),
+            },
+            {
+              label: "Attention vs Structure Gap",
+              value: formatMetricValue(alignment.attention_vs_structure_gap),
+            },
+            {
+              label: "Signals",
+              value: displaySignals,
+            },
+            {
+              label: "Flags",
+              value: mapFlagsForDemo(alignment.flags).join(", ") || "—",
+            },
+          ]}
+        />
+      </SectionCard>
+
+      <SectionCard title="Participant Signals">
+        <p className="mb-4 text-xs italic text-zinc-500">
+          Participant mix derived from cohort composition across the current observation window
+        </p>
+
+        <KeyValueTable
+          rows={[
+            {
+              label: "Participation Quality",
+              value: formatMetricValue(participationQuality),
+            },
+            {
+              label: "Total Traders",
+              value: formattedTotalTraders,
+            },
+            {
+              label: "Total Trades",
+              value: formattedTotalTrades,
+            },
+            {
+              label: "Total Volume",
+              value: formattedTotalVolume,
+            },
+            {
+              label: "Neutral Share",
+              value: neutralShare !== null ? formatPercent01(neutralShare) : "Not available",
+            },
+            {
+              label: "Whale Share",
+              value: whaleShare !== null ? formatPercent01(whaleShare) : "Not available",
+            },
+            {
+              label: "Speculative Share",
+              value:
+                speculativeShare !== null
+                  ? formatPercent01(speculativeShare)
+                  : "Not available",
+            },
+            {
+              label: "Participant Flags",
+              value: participantFlags.length > 0 ? participantFlags.join(", ") : "—",
+            },
+            {
+              label: "Cohort Summary",
+              value: combinedCohorts || "—",
+            },
+          ]}
+        />
+      </SectionCard>
+    </div>
+  );
+}

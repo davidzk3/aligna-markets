@@ -1,0 +1,241 @@
+import CandidateCard from "@/components/CandidateCard";
+import { getMarketExplorer } from "@/lib/api";
+import { formatNumber } from "@/lib/format";
+import {
+  buildCardCommentary,
+  deriveDisplayStructuralState,
+  deriveParticipantFlags,
+} from "@/lib/marketNarrative";
+
+type ExplorerMarket = {
+  market_id: string;
+  title?: string | null;
+  category?: string | null;
+  url?: string | null;
+
+  structural_day?: string | null;
+  social_day?: string | null;
+  alignment_day?: string | null;
+
+  structural_score?: number | null;
+  structural_state?: string | null;
+
+  social_score?: number | null;
+  social_state?: string | null;
+  social_recommendation?: string | null;
+
+  alignment_state?: string | null;
+  alignment_summary?: string | null;
+  summary?: string | null;
+
+  participation_quality_score?: number | null;
+  liquidity_durability_score?: number | null;
+  concentration_hhi?: number | null;
+
+  neutral_share?: number | null;
+  whale_share?: number | null;
+  speculative_share?: number | null;
+
+  flags?: string[] | null;
+};
+
+type MarketExplorerResponse = {
+  day?: string | null;
+  rows?: ExplorerMarket[];
+};
+
+function normalizeDemandState(value?: string | null): string {
+  switch (value) {
+    case "strong":
+      return "strong";
+    case "established":
+      return "established";
+    case "building":
+      return "building";
+    case "limited":
+      return "limited";
+    case "absent":
+      return "absent";
+
+    // backward compatibility
+    case "high":
+      return "strong";
+    case "rising":
+      return "building";
+    case "forming":
+    case "watch":
+    case "moderate":
+      return "limited";
+    case "low":
+    case "weak":
+    default:
+      return "absent";
+  }
+}
+
+function normalizeAlignmentState(value?: string | null): string {
+  switch (value) {
+    case "confirmed":
+      return "confirmed";
+    case "developing":
+      return "developing";
+    case "underdistributed":
+      return "underdistributed";
+    case "overextended":
+      return "overextended";
+    case "fragile":
+      return "fragile";
+    case "inactive":
+      return "inactive";
+
+    // legacy compatibility
+    case "balanced":
+      return "developing";
+    case "structure_led":
+      return "underdistributed";
+    case "hype_led":
+      return "overextended";
+    case "dead_zone":
+      return "inactive";
+    case "partial":
+    case "unknown":
+    default:
+      return "inactive";
+  }
+}
+
+export default async function HomePage() {
+  let pageError: string | null = null;
+
+  let markets: Array<
+    ExplorerMarket & {
+      structuralState: string;
+      socialState: string;
+      alignmentState: string;
+      summary: string;
+    }
+  > = [];
+
+  try {
+    const explorer = (await getMarketExplorer(30)) as MarketExplorerResponse;
+
+    markets = (explorer.rows ?? []).map((item) => {
+      const structuralState =
+        deriveDisplayStructuralState({
+          structuralScore: item.structural_score ?? null,
+          participationQuality: item.participation_quality_score ?? null,
+          liquidityDurability: item.liquidity_durability_score ?? null,
+          concentrationHHI: item.concentration_hhi ?? null,
+          fallbackRecommendation: item.structural_state ?? null,
+        }) || "weak";
+
+      const socialState = normalizeDemandState(
+        item.social_state ?? item.social_recommendation ?? null
+      );
+
+      const alignmentState = normalizeAlignmentState(item.alignment_state);
+
+      const summary =
+        item.summary ||
+        item.alignment_summary ||
+        buildCardCommentary({
+          structuralState,
+          socialState,
+          alignmentState,
+          participationQuality: item.participation_quality_score ?? null,
+          liquidityDurability: item.liquidity_durability_score ?? null,
+          concentrationHHI: item.concentration_hhi ?? null,
+          whaleShare: item.whale_share ?? null,
+          speculativeShare: item.speculative_share ?? null,
+          isSocialDemo: false,
+        });
+
+      return {
+        ...item,
+        structuralState,
+        socialState,
+        alignmentState,
+        summary,
+      };
+    });
+  } catch (err) {
+    pageError =
+      err instanceof Error ? err.message : "Failed to load market explorer";
+  }
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-8">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <p className="text-sm font-medium text-zinc-500">
+          Prediction Market Intelligence
+        </p>
+
+        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
+          Markets ranked across market structure and external demand intelligence
+        </h1>
+
+        <p className="mt-2 max-w-3xl text-sm text-zinc-600">
+          A real-time intelligence layer for evaluating market structure, external demand, and alignment.
+          Structure reflects liquidity quality, participation quality, concentration,
+          and durability, not volume alone. Demand intelligence reflects external
+          attention quality and signal maturity from live social and news inputs.
+        </p>
+      </section>
+
+      {pageError ? (
+        <section className="rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700 shadow-sm">
+          {pageError}
+        </section>
+      ) : markets.length === 0 ? (
+        <section className="rounded-2xl border border-zinc-200 bg-white p-5 text-zinc-600 shadow-sm">
+          No markets found.
+        </section>
+      ) : (
+        <section className="space-y-4">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-zinc-900">
+                Market Explorer
+              </h2>
+              <p className="mt-1 text-sm italic text-zinc-500">
+                Live markets ranked by market structure and external demand intelligence
+              </p>
+            </div>
+
+            <p className="text-sm text-zinc-500">{markets.length} markets</p>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            {markets.map((item) => (
+              <CandidateCard
+                key={item.market_id}
+                marketId={item.market_id}
+                title={item.title}
+                category={item.category}
+                structuralState={item.structuralState}
+                socialSignal={item.socialState}
+                alignmentState={item.alignmentState}
+                scoreLabel="Structural quality score"
+                scoreValue={
+                  item.structural_score !== null &&
+                  item.structural_score !== undefined
+                    ? formatNumber(item.structural_score)
+                    : "—"
+                }
+                summary={item.summary}
+                flags={deriveParticipantFlags({
+                  neutralShare: item.neutral_share ?? null,
+                  whaleShare: item.whale_share ?? null,
+                  speculativeShare: item.speculative_share ?? null,
+                  participationQuality:
+                    item.participation_quality_score ?? null,
+                })}
+                url={item.url}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,33 @@
+{
+  "payload": {
+    "market_id": "1467143",
+    "oracle_type": "Managed Optimistic Oracle V2",
+    "oracle_contract": "0x2C0367a9DB231dDeBd88a94b4f6461a6e47C58B1",
+    "identifier": "YES_OR_NO_QUERY",
+    "umip": "UMIP 107",
+    "requester": "0x65070be91477460d8a7aeeb94ef92fe056c2f2a7",
+    "request_transaction": "0x395cc1d95e6e7c32febb3679fcc64962336de54f99fac4da4de686fb860deb2e",
+    "proposer": "0xcfdd6663018840621fa812ba6043acb5b1fa29d1",
+    "proposal_transaction": "0x12dad618298b96b487bc3de97e36d7a908c158ab8f5e41740f5a2a6b0ce992eb",
+    "disputer": "0x42f939401022d8188fc405eda8eb4e3b16d62a47",
+    "dispute_transaction": "0x062a369843d9e22fcc68cfc32a13608c5605875559bf35b2a827650fa59c81d5",
+    "settlement_recipient": "0x42f939401022d8188fc405eda8eb4e3b16d62a47",
+    "settlement_transaction": "0xa110d6373e7ba09bef14749fee8b7f6128a3ee1427ece615c9dc3feadd276049",
+    "requested_time": "2026-03-10T16:17:05+00:00",
+    "proposed_time": "2026-03-10T18:21:11+00:00",
+    "disputed_time": "2026-03-10T19:22:33+00:00",
+    "settled_time": "2026-03-14T00:32:11+00:00",
+    "title": "Will Iran strike Israel on March 10?",
+    "description": "This market will resolve to \"Yes\" if Iran initiates a drone, missile, or air strike on Israel’s soil on the listed date in Israel Time (GMT+2). Otherwise, this market will resolve to \"No\".",
+    "additional_text_data": "Proposal: Early Request",
+    "bulletin_board_text": null,
+    "res_data": "p1: 0, p2: 1, p3: 0.5",
+    "initializer": "91430cad2d3975766499717fa0d66a78d814e5c5",
+    "chain": "Polygon",
+    "expiry_type": "Event-based Expiry",
+    "disputed": true,
+    "settled": true,
+    "outcome_proposed": "Early Request",
+    "outcome_settled": null
+  }
+}

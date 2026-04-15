@@ -1,0 +1,202 @@
+@app.get("/ops/markets/explorer", response_model=MarketExplorerResponse)
+def ops_market_explorer(
+    day: Optional[date] = Query(default=None),
+    limit: int = Query(default=30, ge=1, le=200),
+):
+    resolved_day_q = """
+    SELECT COALESCE(
+      %s::date,
+      (SELECT MAX(day) FROM marts.market_day)
+    )::text AS day
+    """
+
+    q = """
+WITH structural_day AS (
+  SELECT COALESCE(
+    %s::date,
+    (SELECT MAX(day) FROM marts.market_day)
+  ) AS day
+),
+structural_base AS (
+  SELECT
+    md.market_id,
+    md.day::text AS structural_day,
+    (md.health_score::float / 100.0) AS structural_score,
+    md.concentration_hhi::float AS concentration_hhi
+  FROM marts.market_day md
+  WHERE md.day = (SELECT day FROM structural_day)
+),
+market_meta AS (
+  SELECT
+    cm.market_id,
+    cm.title,
+    cm.category
+  FROM core.markets cm
+),
+integrity_latest AS (
+  SELECT DISTINCT ON (i.market_id)
+    i.market_id,
+    i.title AS integrity_title,
+    i.category AS integrity_category,
+    i.url AS integrity_url,
+    i.regime AS structural_state
+  FROM public.market_integrity_score_daily i
+  ORDER BY i.market_id, i.day DESC
+),
+launch_latest AS (
+  SELECT DISTINCT ON (li.market_id)
+    li.market_id,
+    li.day::text AS launch_day,
+    li.recommendation AS structural_recommendation,
+    li.participation_quality_score::float AS participation_quality_score,
+    li.liquidity_durability_score::float AS liquidity_durability_score
+  FROM public.market_launch_intelligence_daily li
+  ORDER BY li.market_id, li.day DESC
+),
+social_latest AS (
+  SELECT DISTINCT ON (si.market_id)
+    si.market_id,
+    si.day::text AS social_day,
+    si.demand_score::float AS social_score,
+    si.demand_state AS social_state,
+    si.recommendation AS social_recommendation,
+    COALESCE(si.flags, ARRAY[]::text[]) AS social_flags
+  FROM public.market_social_intelligence_daily si
+  ORDER BY si.market_id, si.day DESC
+),
+alignment_latest AS (
+  SELECT DISTINCT ON (a.market_id)
+    a.market_id,
+    a.day::text AS alignment_day,
+    a.alignment_state,
+    a.summary AS alignment_summary,
+    COALESCE(a.flags, ARRAY[]::text[]) AS alignment_flags
+  FROM public.market_alignment_daily a
+  ORDER BY a.market_id, a.day DESC
+)
+SELECT
+  sb.market_id,
+  COALESCE(mm.title, il.integrity_title, sb.market_id) AS title,
+  COALESCE(mm.category, il.integrity_category) AS category,
+  il.integrity_url AS url,
+
+  sb.structural_day,
+  sl.social_day,
+  al.alignment_day,
+  ll.launch_day,
+
+  sb.structural_score,
+  COALESCE(il.structural_state, NULL) AS structural_state,
+  ll.structural_recommendation,
+
+  sl.social_score,
+  sl.social_state,
+  sl.social_recommendation,
+
+  al.alignment_state,
+  al.alignment_summary,
+  COALESCE(
+    al.alignment_summary,
+    CASE
+      WHEN al.alignment_state = 'confirmed' THEN 'Structure and demand reinforce each other.'
+      WHEN al.alignment_state = 'developing' THEN 'Structure is improving but not fully validated yet.'
+      WHEN al.alignment_state = 'underdistributed' THEN 'Structure looks healthier than current external attention.'
+      WHEN al.alignment_state = 'overextended' THEN 'Demand is ahead of current market readiness.'
+      WHEN al.alignment_state = 'fragile' THEN 'Integrity or concentration issues make current price discovery less trustworthy.'
+      WHEN al.alignment_state = 'inactive' THEN 'Both structure and demand are currently weak.'
+      ELSE NULL
+    END
+  ) AS summary,
+
+  ll.participation_quality_score,
+  ll.liquidity_durability_score,
+  sb.concentration_hhi,
+
+  ARRAY(
+    SELECT DISTINCT x
+    FROM unnest(
+      COALESCE(sl.social_flags, ARRAY[]::text[]) ||
+      COALESCE(al.alignment_flags, ARRAY[]::text[])
+    ) AS x
+  ) AS flags
+FROM structural_base sb
+LEFT JOIN market_meta mm
+  ON mm.market_id = sb.market_id
+LEFT JOIN integrity_latest il
+  ON il.market_id = sb.market_id
+LEFT JOIN launch_latest ll
+  ON ll.market_id = sb.market_id
+LEFT JOIN social_latest sl
+  ON sl.market_id = sb.market_id
+LEFT JOIN alignment_latest al
+  ON al.market_id = sb.market_id
+WHERE COALESCE(mm.title, il.integrity_title, sb.market_id) IS NOT NULL
+ORDER BY
+  sb.structural_score DESC NULLS LAST,
+  sl.social_score DESC NULLS LAST,
+  sb.market_id ASC
+LIMIT %s;
+"""
+
+    with psycopg.connect(get_db_dsn()) as conn:
+        with conn.cursor() as cur:
+            cur.execute(resolved_day_q, (day,))
+            resolved_day_row = cur.fetchone()
+            resolved_day = resolved_day_row[0] if resolved_day_row else None
+
+            cur.execute(q, (day, limit))
+            rows = rows_as_dicts(cur)
+
+    return {
+        "day": resolved_day,
+        "rows": rows,
+    }
+
+# -----------------------------
+# Single market (latest view)
+# Supports:
+# - full markets with core.markets + marts.market_day
+# - integrity-only live markets not yet present in core.markets
+# -----------------------------
+@app.get("/ops/markets/{market_id}")
+def ops_market(market_id: str):
+    q = """
+WITH latest_md AS (
+  SELECT
+    md.market_id,
+    md.day,
+    md.volume,
+    md.trades,
+    md.unique_traders,
+    md.spread_median,
+    md.depth_2pct_median,
+    md.concentration_hhi,
+    md.health_score,
+    md.risk_score,
+    md.flags
+  FROM marts.market_day md
+  WHERE md.market_id = %s
+  ORDER BY md.day DESC
+  LIMIT 1
+),
+latest_integrity AS (
+  SELECT
+    i.market_id,
+    i.day,
+    i.title,
+    i.category,
+    i.regime,
+    i.regime_reason,
+    i.trades,
+    i.unique_traders,
+    i.market_quality_score,
+    i.liquidity_health_score,
+    i.concentration_risk_score,
+    i.whale_volume_share,
+    i.radar_risk_score,
+    i.manipulation_score,
+    i.manipulation_signal,
+    i.whale_role_share,
+    i.speculator_role_share,
+    i.neutral_role_share,
+    i.possible_farmer_count,

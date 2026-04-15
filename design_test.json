@@ -1,0 +1,8 @@
+{
+  "title": "Game 2: Both Teams Slay a Dragon?",
+  "description": "This market is about whether both teams slay at least one elemental dragon during Game 2. In League of Legends, elemental dragons spawn in the dragon pit starting at 5:00 game time. After being slain, the next dragon spawns 5 minutes later. Once a team claims the Dragon Soul by slaying four dragons, all subsequent dragon spawns become Elder Dragons. This market will resolve to Yes if both teams each slay at least one elemental dragon during Game 2. This market will resolve to No if either team does not slay any elemental dragon during Game 2. Only elemental dragons count. Elder Dragon kills do not count. If the match is canceled or delayed beyond 7 days, this market will resolve to 50-50. If Game 2 is never played due to forfeit, disqualification, or walkover, this market will resolve to 50-50. If Game 2 is not played because the series result has already been determined, this market will resolve to 50-50. If Game 2 begins but is not completed and ends via surrender, this market will resolve based on whether both teams had slain at least one elemental dragon prior to stoppage. If Game 2 is remade, resolution will be based on the remade game only. The resolution source for this market will be official information from gol.gg. However, if gol.gg has not published final results within 2 hours after the event's conclusion, a consensus of credible reporting may be used instead including video evidence.",
+  "category": "esports",
+  "market_type": "event_binary",
+  "protocol": "polymarket",
+  "oracle_family": "uma_oo"
+}
