@@ -646,14 +646,30 @@ def get_latest_uma_resolution_intelligence(market_id: str):
 @app.get("/health")
 def health():
     try:
-        with psycopg.connect(get_db_dsn()) as conn:
+        dsn = get_db_dsn()
+        with psycopg.connect(dsn) as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT 1;")
-        return {"ok": True, "db": "ok"}
-    except Exception:
+                cur.execute("SELECT current_database(), current_user;")
+                row = cur.fetchone()
+
+        return {
+            "ok": True,
+            "db": "ok",
+            "database": row[0],
+            "user": row[1],
+        }
+
+    except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail={"code": "db_unreachable", "message": "Database unreachable", "details": {}},
+            detail={
+                "code": "db_unreachable",
+                "message": "Database unreachable",
+                "details": {
+                    "error": str(e),
+                    "dsn_present": bool(get_db_dsn()),
+                },
+            },
         )
 
 # -----------------------------
