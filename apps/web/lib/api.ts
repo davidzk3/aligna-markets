@@ -100,11 +100,20 @@ export async function getMarketExplorer(
 
 export async function fetchIntegrityHistory(marketId: string) {
   const res = await fetch(
-    `http://localhost:8000/ops/markets/${marketId}/integrity-history`
+    `${API_BASE_URL}/ops/markets/${marketId}/integrity-history`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(OPS_API_TOKEN ? { Authorization: `Bearer ${OPS_API_TOKEN}` } : {}),
+      },
+      cache: "no-store",
+    }
   );
 
   if (!res.ok) {
-    throw new Error("Failed to fetch integrity history");
+    const text = await res.text();
+    throw new Error(`Failed to fetch integrity history: ${text}`);
   }
 
   return res.json();
