@@ -129,13 +129,16 @@ def simulate_resolution(payload: Dict[str, Any]) -> Dict[str, Any]:
         "confidence": round(clarity * (1 - risk), 4),
     }
 
-    simulation_run_id = persist_resolution_simulation_run(
-        payload=payload,
-        simulation=simulation,
-        design_scores=design_scores,
-        rewrite_eval=rewrite_eval,
-        rewrites=rewrites,
-    )
+    try:
+        simulation_run_id = persist_resolution_simulation_run(
+            payload=payload,
+            simulation=simulation,
+            design_scores=design_scores,
+            rewrite_eval=rewrite_eval,
+            rewrites=rewrites,
+        )
+    except Exception:
+        simulation_run_id = None
 
     return {
         "simulation_run_id": simulation_run_id,
