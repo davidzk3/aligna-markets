@@ -1365,7 +1365,7 @@ def evaluate_market_design_rewrite(payload: Dict[str, Any]) -> Dict[str, Any]:
         persisted = None
 
     return {
-        "id": persisted["id"],
+        "id": persisted["id"] if persisted else None,
         "input_hash": input_hash,
         **result,
     }
