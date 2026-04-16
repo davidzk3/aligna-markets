@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 from typing import Any, Dict, List, Optional
+from unittest import result
 
 import psycopg
 from psycopg.types.json import Json
@@ -936,12 +937,15 @@ def evaluate_market_design(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     final_scores["summary"] = build_summary(normalized_payload, features, final_scores)
 
-    persisted = persist_design_evaluation(
-        normalized_payload,
-        features,
-        final_scores,
-        input_hash,
-    )
+    try:
+        persisted = persist_design_evaluation(
+            normalized_payload,
+            features,
+            final_scores,
+            input_hash,
+        )
+    except Exception:
+        persisted = None
 
     return {
         "id": persisted["id"],

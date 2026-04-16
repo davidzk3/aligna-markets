@@ -1359,7 +1359,10 @@ def evaluate_market_design_rewrite(payload: Dict[str, Any]) -> Dict[str, Any]:
     audit_trace = build_audit_trace(result)
     result.update(audit_trace)
 
-    persisted = persist_rewrite_evaluation(normalized_payload, result, input_hash)
+    try:
+        persisted = persist_rewrite_evaluation(normalized_payload, result, input_hash)
+    except Exception:
+        persisted = None
 
     return {
         "id": persisted["id"],
