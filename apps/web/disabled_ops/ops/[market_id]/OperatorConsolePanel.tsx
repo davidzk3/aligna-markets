@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchJSON } from "../../lib (rename back to lib)/api";
+import { fetchJSON } from "@/lib/api";
 
 type IncidentStatus = "OPEN" | "MONITOR" | "RESOLVED";
 type InterventionStatus = "PLANNED" | "APPLIED" | "REVERTED" | "CANCELLED";
