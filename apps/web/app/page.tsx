@@ -1,219 +1,258 @@
 import Link from "next/link";
 
-function Pill({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const useCases = [
+  {
+    title: "Launch intelligence",
+    body: "Review market wording, ambiguity, source hierarchy, timing logic, rewrite needs, and expected dispute exposure before a market goes live.",
+  },
+  {
+    title: "Live market triage",
+    body: "Track structure, social demand, participation quality, alignment, and intervention pressure while markets are active.",
+  },
+  {
+    title: "Support intelligence",
+    body: "Identify when support is likely needed, which failure mode is present, and whether intervention is likely to improve market quality.",
+  },
+  {
+    title: "Resolution learning",
+    body: "Compare predicted versus actual settlement behavior so launch review, simulation, and intervention logic improve over time.",
+  },
+] as const;
+
+const lifecycle = [
+  {
+    title: "Before launch",
+    body: "Review wording, resolution safety, expected dispute risk, and likely support requirements before a market goes live.",
+  },
+  {
+    title: "While live",
+    body: "Measure whether demand, structure, and participation are combining into a healthy market or drifting toward fragility and support dependence.",
+  },
+  {
+    title: "After outcome",
+    body: "Persist what happened, compare prediction versus reality, and feed those learnings back into future launch and support decisions.",
+  },
+] as const;
+
+function Pill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-700">
+    <span className="inline-flex rounded-full border border-black/10 bg-white/70 px-3 py-1 text-xs font-medium tracking-[0.08em] text-neutral-700 backdrop-blur">
       {children}
     </span>
   );
 }
 
-export default function LandingPage() {
+function SectionEyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-6xl space-y-16">
-      <section className="rounded-3xl border border-zinc-200 bg-white px-8 py-14 shadow-sm">
-        <div className="max-w-4xl space-y-6">
-          <div className="flex flex-wrap gap-2">
-            <Pill>Prediction Markets</Pill>
-            <Pill>Lifecycle Intelligence</Pill>
-            <Pill>Resolution</Pill>
-            <Pill>Learning Loop</Pill>
-          </div>
-
-
-          <div className="space-y-4">
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
-              FULL LIFECYCLE INTELLIGENCE FOR PREDICTION MARKETS
-            </p>
-
-            <h1 className="max-w-4xl text-4xl font-semibold leading-tight text-zinc-950 md:text-5xl">
-              Design, evaluate, simulate, and learn from prediction markets across the full lifecycle.
-            </h1>
-
-            <p className="max-w-3xl text-lg leading-8 text-zinc-600">
-              Aligna Markets is a full lifecycle prediction market intelligence system. It evaluates market design, live market structure, external demand, participant quality, intervention needs, oracle resolution risk, and post-resolution learning.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-4">
-            <Link
-              href="/explorer"
-              className="inline-flex items-center rounded-xl bg-zinc-900 px-5 py-3 text-sm font-semibold text-white hover:bg-zinc-800"
-            >
-              Open Explorer
-            </Link>
-
-            <Link
-              href="/methodology"
-              className="inline-flex items-center rounded-xl border border-zinc-200 bg-white px-5 py-3 text-sm font-semibold text-zinc-900 hover:bg-zinc-50"
-            >
-              View Methodology
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-6 md:grid-cols-3">
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-medium text-zinc-500">Problem</p>
-          <h2 className="mt-2 text-xl font-semibold text-zinc-900">
-            A market is more than a price chart.
-          </h2>
-          <p className="mt-3 text-sm leading-7 text-zinc-600">
-            A market can look active while still being fragile, misaligned, poorly specified, or risky to resolve.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-medium text-zinc-500">What Aligna Measures</p>
-          <h2 className="mt-2 text-xl font-semibold text-zinc-900">
-            Design, live trading, resolution, and learning signals.
-          </h2>
-          <p className="mt-3 text-sm leading-7 text-zinc-600">
-            Aligna evaluates market design quality, live microstructure, external demand, cohort participation, intervention candidates, simulated resolution paths, and the learning loop between prediction and actual outcome.
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-          <p className="text-sm font-medium text-zinc-500">Operator Output</p>
-          <h2 className="mt-2 text-xl font-semibold text-zinc-900">
-            An operating system, not just a dashboard.
-          </h2>
-          <p className="mt-3 text-sm leading-7 text-zinc-600">
-            The product supports launch review, live market triage, intervention reasoning, oracle-aware resolution analysis, and post-resolution evaluation so protocols can operate markets as engineered systems.
-          </p>
-        </div>
-      </section>
-
-      <section className="rounded-3xl border border-zinc-200 bg-white px-8 py-10 shadow-sm">
-        <div className="max-w-4xl space-y-6">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
-              LIFECYCLE COVERAGE
-            </p>
-            <h2 className="mt-2 text-3xl font-semibold text-zinc-900">
-              Each market is evaluated across its lifecycle.
-            </h2>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-              <h3 className="text-lg font-semibold text-emerald-900">
-                Before launch
-              </h3>
-              <p className="mt-2 text-sm leading-7 text-emerald-800">
-                Evaluate design clarity, rewrite needs, launch readiness, and dispute risk before a market goes live.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
-              <h3 className="text-lg font-semibold text-amber-900">
-                While live
-              </h3>
-              <p className="mt-2 text-sm leading-7 text-amber-800">
-                Track structure, demand, alignment, participant quality, and intervention candidates while the market is actively trading.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-              <h3 className="text-lg font-semibold text-blue-900">
-                At resolution
-              </h3>
-              <p className="mt-2 text-sm leading-7 text-blue-800">
-                Assess oracle-facing fragility, simulate likely resolution paths, and identify markets that may be disputed, delayed, or require manual judgment.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
-              <h3 className="text-lg font-semibold text-zinc-900">After outcome</h3>
-              <p className="mt-2 text-sm leading-7 text-zinc-700">
-                Compare predicted vs actual resolution behavior, measure timing error, and build a learning loop that improves future design, simulation, and intervention decisions.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-3xl border border-zinc-200 bg-white px-8 py-10 shadow-sm">
-        <div className="max-w-4xl space-y-6">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-500">
-              INTERVENTION AND RESOLUTION LAYER
-            </p>
-            <h2 className="mt-2 text-3xl font-semibold text-zinc-900">
-              Not every weak market deserves support, and not every market deserves launch.
-            </h2>
-          </div>
-
-          <p className="max-w-3xl text-sm leading-7 text-zinc-600">
-            Aligna helps protocols decide when to launch, when to rewrite, when to support, when to avoid subsidy, how a market may behave in the oracle workflow, and how to learn from actual outcomes after settlement.
-          </p>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-zinc-200 p-5">
-              <h3 className="text-base font-semibold text-zinc-900">
-                Example operator actions
-              </h3>
-              <ul className="mt-3 space-y-2 text-sm text-zinc-600">
-                <li>Launch with edits</li>
-                <li>Rewrite before launch</li>
-                <li>Add targeted liquidity</li>
-                <li>Do not subsidize yet</li>
-                <li>Monitor and learn</li>
-              </ul>
-            </div>
-
-            <div className="rounded-2xl border border-zinc-200 p-5">
-              <h3 className="text-base font-semibold text-zinc-900">
-                Example Lifecycle risks
-              </h3>
-              <ul className="mt-3 space-y-2 text-sm text-zinc-600">
-                <li>Oracle ambiguity</li>
-                <li>One-sided liquidity risk</li>
-                <li>Artificial or distorted participation</li>
-                <li>Prediction vs reality mismatch</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-3xl border border-zinc-200 bg-zinc-900 px-8 py-10 text-white shadow-sm">
-        <div className="max-w-4xl space-y-5">
-          <p className="text-sm font-medium uppercase tracking-[0.18em] text-zinc-400">
-            START WITH THE PRODUCT
-          </p>
-
-          <h2 className="text-3xl font-semibold">
-            Review markets across launch, live trading, resolution, and learning.
-          </h2>
-
-          <p className="max-w-3xl text-sm leading-7 text-zinc-300">
-            Use Launch Review for draft markets, Explorer for live market triage, and detailed market pages for intervention, participant, and oracle-aware reasoning.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-  <Link
-    href="/launch-review"
-    className="inline-flex items-center rounded-xl bg-white px-5 py-3 text-sm font-semibold text-zinc-900 hover:bg-zinc-100"
-  >
-    Launch Review
-  </Link>
-
-  <Link
-    href="/explorer"
-    className="inline-flex items-center rounded-xl border border-white/20 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10"
-  >
-    Explore Markets
-  </Link>
-</div>
-        </div>
-      </section>
-    </div>
+    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500">
+      {children}
+    </p>
   );
 }
 
+export default function HomePage() {
+  return (
+    <main className="min-h-screen bg-[#f7f5f1] text-neutral-950">
+      <section className="border-b border-black/8 bg-[radial-gradient(circle_at_top,#efe7ff_0%,#f7f5f1_42%,#f7f5f1_100%)]">
+        <div className="mx-auto max-w-7xl px-6 py-20 sm:px-8 lg:px-10 lg:py-24">
+          <div className="grid gap-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <div>
+              <div className="mb-6 flex flex-wrap gap-2">
+                <Pill>Prediction Markets</Pill>
+                <Pill>Lifecycle Intelligence</Pill>
+                <Pill>Launch + Live + Learning</Pill>
+              </div>
+
+              <SectionEyebrow>Aligna Markets</SectionEyebrow>
+
+              <h1 className="mt-5 max-w-5xl text-5xl font-semibold leading-[1.02] tracking-[-0.04em] text-neutral-950 sm:text-6xl lg:text-7xl">
+                Design, monitor, simulate, and learn from prediction markets.
+              </h1>
+
+              <p className="mt-6 max-w-2xl text-lg leading-8 text-neutral-700 sm:text-xl">
+                Aligna Markets is a full lifecycle prediction market intelligence
+                system. It helps protocols review markets before launch, monitor
+                live market quality, understand support and incentive dynamics,
+                and post-resolution learning.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href="/launch-review"
+                  className="inline-flex items-center rounded-full bg-neutral-950 px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                >
+                  Launch Review
+                </Link>
+                <Link
+                  href="/explorer"
+                  className="inline-flex items-center rounded-full border border-black/10 bg-white px-6 py-3 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-50"
+                >
+                  Open Explorer
+                </Link>
+              </div>
+
+              <p className="mt-6 max-w-2xl text-sm leading-7 text-neutral-600">
+                Start with Launch Review for draft markets. Use Explorer for
+                live market triage and operator monitoring.
+              </p>
+            </div>
+
+            <div className="rounded-[30px] border border-black/8 bg-white p-5 shadow-[0_20px_80px_rgba(15,23,42,0.08)] sm:p-6">
+              <div className="rounded-[24px] border border-black/8 bg-neutral-950 p-5 font-mono text-[13px] leading-6 text-white/85">
+                <div className="text-white/40">aligna.market_snapshot</div>
+
+                <div className="mt-3 text-white">market_id: m_74294b4d75</div>
+                <div>market: Will the Fed cut rates by June?</div>
+                <div>structural_state: moderate</div>
+                <div>demand_state: established</div>
+                <div>alignment_state: conviction_mismatch</div>
+                <div>support_state: review_required</div>
+                <div>recommended_action: add_targeted_liquidity</div>
+                <div>learning_status: tracking</div>
+
+                <div className="mt-4 border-t border-white/10 pt-4 text-white/70">
+                  Demand is present, but market quality is not yet converting
+                  into credible participation.
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-black/8 bg-[#faf8f4] p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                    Live snapshot
+                  </div>
+                  <div className="mt-2 min-h-[72px] text-sm leading-6 text-neutral-700">
+                    Real-time signals show how structure, social demand, participation, and intervention pressure are evolving, so teams can define and execute the right support strategy.
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-black/8 bg-[#faf8f4] p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500">
+                    Learning loop
+                  </div>
+                  <div className="mt-2 min-h-[72px] text-sm leading-6 text-neutral-700">
+                    The system records how markets behave across their full lifecycle then feeds those learnings back into future market design, support, and intervention strategy.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 py-20 sm:px-8 lg:px-10">
+        <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
+          <div>
+            <SectionEyebrow>What the system does</SectionEyebrow>
+            <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-[-0.04em] text-neutral-950 sm:text-5xl">
+              One operating layer across launch, live markets, and learning.
+            </h2>
+            <p className="mt-5 max-w-xl text-base leading-8 text-neutral-700">
+              The product connects market design, live monitoring, support
+              decisions, and eventual outcomes into one continuous system.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {useCases.map((item) => (
+              <div
+                key={item.title}
+                className="rounded-[26px] border border-black/8 bg-white p-6 shadow-sm"
+              >
+                <div className="text-xl font-semibold tracking-[-0.03em] text-neutral-950">
+                  {item.title}
+                </div>
+                <p className="mt-3 min-h-[112px] text-sm leading-7 text-neutral-700">
+                  {item.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 pb-20 sm:px-8 lg:px-10">
+        <div className="rounded-[34px] border border-black/8 bg-white p-8 shadow-sm sm:p-10">
+          <SectionEyebrow>Lifecycle coverage</SectionEyebrow>
+
+          <div className="mt-4 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <h2 className="max-w-3xl text-4xl font-semibold tracking-[-0.04em] text-neutral-950 sm:text-5xl">
+              The product is designed to learn, not just score.
+            </h2>
+            <p className="max-w-xl text-base leading-8 text-neutral-700">
+              Launch review, live triage, and outcome evaluation are part of the
+              same operating system.
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-4 lg:grid-cols-3">
+            {lifecycle.map((item, index) => (
+              <div
+                key={item.title}
+                className="rounded-[28px] border border-black/8 bg-[#faf8f4] p-6"
+              >
+                <div className="text-xs font-semibold uppercase tracking-[0.24em] text-neutral-500">
+                  {String(index + 1).padStart(2, "0")}
+                </div>
+                <div className="mt-4 text-2xl font-semibold tracking-[-0.03em] text-neutral-950">
+                  {item.title}
+                </div>
+                <p className="mt-4 min-h-[140px] text-sm leading-7 text-neutral-700">
+                  {item.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 pb-24 sm:px-8 lg:px-10">
+        <div className="rounded-[34px] border border-black/8 bg-gradient-to-br from-neutral-950 via-[#14182b] to-[#0a0f1d] p-8 text-white shadow-[0_30px_90px_rgba(15,23,42,0.14)] sm:p-10">
+          <div className="grid gap-10 lg:grid-cols-[1fr_0.92fr] lg:items-center">
+            <div>
+              <SectionEyebrow>Start with the product</SectionEyebrow>
+
+              <h2 className="mt-4 max-w-3xl text-4xl font-semibold tracking-[-0.04em] text-white sm:text-5xl">
+                Review draft markets, triage live ones, and learn from real
+                outcomes.
+              </h2>
+
+              <p className="mt-5 max-w-2xl text-base leading-8 text-white/70">
+                Use Launch Review for pre-launch market design and settlement
+                safety. Use Explorer and market detail pages to understand
+                whether live market activity is healthy, support-dependent, or
+                becoming distorted.
+              </p>
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link
+                  href="/launch-review"
+                  className="inline-flex items-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-neutral-950 transition hover:bg-neutral-100"
+                >
+                  Review a market
+                </Link>
+                <Link
+                  href="/explorer"
+                  className="inline-flex items-center rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/5"
+                >
+                  Explore live markets
+                </Link>
+              </div>
+            </div>
+
+            <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5 font-mono text-[13px] leading-6 text-white/80">
+              <div className="text-white/45">aligna.learning_loop</div>
+              <div className="mt-2">launch_review: complete</div>
+              <div>simulation_run_id: 1</div>
+              <div>predicted_resolution_path: clean_resolution</div>
+              <div>actual_resolution_path: clean_resolution</div>
+              <div>prediction_correct: true</div>
+              <div>timing_error_hours: 1.0</div>
+              <div>evaluation_status: persisted</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
