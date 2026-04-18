@@ -50,6 +50,27 @@ function SectionEyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
+function CoveragePill({
+  children,
+  variant = "default",
+}: {
+  children: React.ReactNode;
+  variant?: "default" | "coming_soon";
+}) {
+  const styles =
+    variant === "coming_soon"
+      ? "border border-indigo-200 bg-indigo-50 text-indigo-700"
+      : "border border-emerald-200 bg-emerald-50 text-emerald-700";
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-3.5 py-1.5 text-xs font-semibold tracking-[0.04em] ${styles}`}
+    >
+      {children}
+    </span>
+  );
+}
+
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#f7f5f1] text-neutral-950">
@@ -74,6 +95,18 @@ export default function HomePage() {
                 system. It helps protocols review markets before launch, monitor
                 live market quality, understand support and incentive dynamics,
                 and post-resolution learning.
+              </p>
+
+              <div className="mt-7 flex flex-wrap items-center gap-2.5">
+                <CoveragePill>Current coverage: Polymarket</CoveragePill>
+                <CoveragePill variant="coming_soon">
+                  Kalshi integration coming soon
+                </CoveragePill>
+              </div>
+
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-neutral-600">
+                Live market ingestion, structure scoring, and operator triage are
+                currently powered by Polymarket market data.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
