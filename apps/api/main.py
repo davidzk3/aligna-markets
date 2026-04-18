@@ -2622,33 +2622,11 @@ def ops_market_snapshot(
         max_age_days=1,
     )
 
-    if needs_social_refresh:
-        social_refresh_result = safe_call(
-            "social_refresh",
-            lambda: refresh_social_for_market(market_id),
-            {
-                "status": "error",
-                "reason": "refresh_failed",
-            },
-        )
-
-        social_intelligence = safe_call(
-            "social_intelligence_post_refresh",
-            lambda: market_social_intelligence(market_id),
-            social_intelligence or {},
-        )
-
-        alignment_intelligence = safe_call(
-            "alignment_intelligence_post_refresh",
-            lambda: market_alignment_intelligence(market_id),
-            alignment_intelligence or {},
-        )
-    else:
-        social_refresh_result = {
-            "status": "skipped",
-            "reason": "fresh_enough",
-            "day": social_intelligence.get("day") if social_intelligence else None,
-        }
+    social_refresh_result = {
+        "status": "disabled_in_snapshot",
+        "reason": "async_required" if needs_social_refresh else "fresh_enough",
+        "day": social_intelligence.get("day") if social_intelligence else None,
+    }
 
     needs_structural_refresh = market_needs_structural_refresh(market_id)
 
