@@ -99,9 +99,6 @@ export default function HomePage() {
 
               <div className="mt-7 flex flex-wrap items-center gap-2.5">
                 <CoveragePill>Current coverage: Polymarket</CoveragePill>
-                <CoveragePill variant="coming_soon">
-                  Kalshi integration coming soon
-                </CoveragePill>
               </div>
 
               <p className="mt-4 max-w-2xl text-sm leading-7 text-neutral-600">
