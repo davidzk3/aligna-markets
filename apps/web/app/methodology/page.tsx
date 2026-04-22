@@ -4,57 +4,51 @@ export default function MethodologyPage() {
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
         <p className="text-sm font-medium text-zinc-500">Methodology</p>
         <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
-          How Aligna evaluates markets
+          The Aligna Framework: Resolution-First Intelligence
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-600">
-          Aligna Markets evaluates prediction markets as systems. The goal is
-          not only to observe pricing, but to understand whether the market is
-          functioning properly, whether external attention is backed by real
-          participation, and whether intervention is justified.
+          Aligna Markets treats prediction markets as interactive settlement systems. 
+          Our methodology focuses on <strong>Settlement Safety</strong>, ensuring that every market 
+          has a deterministic path to resolution by identifying ambiguity before it manifests as a protocol dispute.
         </p>
       </section>
 
       <section className="grid gap-6 md:grid-cols-2">
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-zinc-900">
-            Structural intelligence
+            Structural Durability
           </h2>
           <p className="mt-3 text-sm leading-7 text-zinc-600">
-            Measures market quality using liquidity health, spread behavior,
-            concentration, durability, and participation distribution.
+            Evaluates the underlying participation quality. We look for maker-like consistency and organic 
+            distribution to ensure a market can withstand volatility without collapsing into whale-driven distortion.
           </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-zinc-900">
-            Demand intelligence
+            Conviction Analysis
           </h2>
           <p className="mt-3 text-sm leading-7 text-zinc-600">
-            Measures external attention, demand state, signal persistence, and
-            whether credible external interest exists around the market.
+            Analyzes external demand for tradable signal. We prioritize <strong>Durable Conviction</strong> over noisy chatter, identifying when attention is a reliable indicator of intent versus speculative narrative exhaust.
           </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-zinc-900">
-            Alignment intelligence
+            Conflict Mapping
           </h2>
           <p className="mt-3 text-sm leading-7 text-zinc-600">
-            Compares market structure and demand to determine whether attention
-            is supported by participation or whether the market is structurally
-            lagging, weak, or ahead of current demand.
+            Compares market rules against 2,800+ historical UMA resolutions. We identify Ambiguity DNA patterns in rule wording that have historically led to settlement friction to harden the resolution path before launch.
           </p>
         </div>
 
         <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-zinc-900">
-            Intervention intelligence
+            The Learning Loop
           </h2>
           <p className="mt-3 text-sm leading-7 text-zinc-600">
-            Flags intervention candidates and proposes first-pass action
-            hypotheses such as targeted liquidity, maker support, redesign, or
-            no subsidy yet. These recommendations are review inputs, not final
-            operator decisions.
+            Our models are updated daily with actual protocol settlement behavior. By closing the gap between 
+            predicted paths and actual DVM outcomes, the system provides a research-led feedback loop.
           </p>
         </div>
       </section>
