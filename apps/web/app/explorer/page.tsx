@@ -146,14 +146,16 @@ export default async function HomePage() {
         </p>
 
         <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
-          Markets ranked across market structure and external demand intelligence
+          Markets ranked across market structure and external demand signals
         </h1>
 
         <p className="mt-2 max-w-3xl text-sm text-zinc-600">
-          A real-time intelligence layer for evaluating market structure,
-          external demand, and alignment. Backend-generated summaries and
-          canonical states are rendered directly here without frontend
-          reinterpretation.
+          A real-time intelligence view for evaluating market structure, external demand, and alignment. 
+          The markets displayed here are a random sample for demonstration purposes.
+          <br />
+          <span className="italic">
+            Click “View detail” on any market to explore deeper structural, demand, and alignment diagnostics.
+          </span>
         </p>
       </section>
 
