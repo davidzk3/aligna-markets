@@ -167,70 +167,6 @@ export default async function HomePage() {
         </section>
       ) : (
         <section className="space-y-10">
-          {/* 🚨 INTERVENTION REQUIRED */}
-          {(() => {
-            const interventionMarkets = markets
-              .filter((m) => m.intervention_needed === true)
-              .sort((a, b) => triagePriorityScore(b) - triagePriorityScore(a));
-
-            if (interventionMarkets.length === 0) return null;
-
-            return (
-              <div className="space-y-4">
-                <div>
-<h2 className="text-lg font-semibold text-rose-700">
-  🚨 Intervention candidates
-</h2>
-<p className="text-sm text-zinc-500">
-  Markets flagged for intervention review based on current structure,
-  demand, and participation signals
-</p>
-                </div>
-
-                <div className="grid gap-8 lg:grid-cols-2">
-                  {interventionMarkets.map((item) => (
-                    <CandidateCard
-                      key={`intervention-${item.market_id}`}
-                      marketId={item.market_id}
-                      title={item.displayTitle}
-                      category={item.category}
-                      structuralState={item.structuralState}
-                      socialSignal={item.socialState}
-                      alignmentState={item.alignmentState}
-                      interventionNeeded={item.intervention_needed}
-                      recommendedAction={item.recommended_action}
-                      actionPriority={item.action_priority}
-                      actionReason={item.action_reason}
-                      incentiveDependency={item.incentive_dependency}
-                      activityQuality={item.activity_quality}
-                      expectedFailureMode={
-                        item.intervention_intelligence?.expected_failure_mode ??
-                        null
-                      }
-                      hasContextualSummary={item.hasContextualSummary}
-                      scoreLabel="Structural quality score"
-                      scoreValue={
-                        item.structural_score !== null &&
-                        item.structural_score !== undefined
-                          ? formatNumber(item.structural_score)
-                          : "—"
-                      }
-                      summary={item.summary}
-                      flags={mapParticipantFlags({
-                        neutralShare: item.neutral_share ?? null,
-                        whaleShare: item.whale_share ?? null,
-                        speculativeShare: item.speculative_share ?? null,
-                        participationQuality:
-                          item.participation_quality_score ?? null,
-                      })}
-                      url={item.url}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-
           {/* COUNTS */}
           {(() => {
             const counts = {
@@ -252,22 +188,34 @@ export default async function HomePage() {
             });
 
             return (
- <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-  {Object.entries(counts).map(([k, v]) => (
-    <div
-      key={k}
-      className="rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm"
-    >
-      <div className="text-sm font-semibold text-zinc-900">
-        {k === "confirmed" && "Confirmed"}
-        {k === "conviction_mismatch" && "Demand ahead of structure"}
-        {k === "structure_led" && "Structure ahead of demand"}
-        {k === "weak" && "Weak"}
-      </div>
-      <div className="mt-1 text-sm text-zinc-500">{v} markets</div>
-    </div>
-  ))}
-</div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {Object.entries(counts).map(([k, v]) => {
+                  const sectionId =
+                    k === "confirmed"
+                      ? "confirmed"
+                      : k === "conviction_mismatch"
+                      ? "conviction_mismatch"
+                      : k === "structure_led"
+                      ? "structure_led"
+                      : "weak";
+
+                  return (
+                    <a
+                      key={k}
+                      href={`#${sectionId}`}
+                      className="rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm transition hover:bg-zinc-50"
+                    >
+                      <div className="text-sm font-semibold text-zinc-900">
+                        {k === "confirmed" && "Confirmed"}
+                        {k === "conviction_mismatch" && "Demand ahead of structure"}
+                        {k === "structure_led" && "Structure ahead of demand"}
+                        {k === "weak" && "Weak"}
+                      </div>
+                      <div className="mt-1 text-sm text-zinc-500">{v} markets</div>
+                    </a>
+                  );
+                })}
+              </div>
             );
           })()}
 
@@ -309,26 +257,26 @@ export default async function HomePage() {
               if (!group || group.length === 0) return null;
 
               return (
-                <div key={groupKey} className="space-y-4">
-<div className="space-y-1">
-  <h2 className="text-2xl font-semibold text-zinc-900">
-    {groupKey === "confirmed" && "Confirmed"}
-    {groupKey === "conviction_mismatch" && "Demand ahead of structure"}
-    {groupKey === "structure_led" && "Structure ahead of demand"}
-    {groupKey === "weak" && "Weak"}
-  </h2>
+                <div key={groupKey} id={groupKey} className="space-y-4">
+                  <div className="space-y-1">
+                    <h2 className="text-2xl font-semibold text-zinc-900">
+                      {groupKey === "confirmed" && "Confirmed"}
+                      {groupKey === "conviction_mismatch" && "Demand ahead of structure"}
+                      {groupKey === "structure_led" && "Structure ahead of demand"}
+                      {groupKey === "weak" && "Weak"}
+                    </h2>
 
-  <p className="text-sm text-zinc-600">
-    {groupKey === "confirmed" &&
-      "Demand and participation are reinforcing each other."}
-    {groupKey === "conviction_mismatch" &&
-      "Attention is present, but structure or participation is not keeping up."}
-    {groupKey === "structure_led" &&
-      "Structure is present, but demand or activation is lagging."}
-    {groupKey === "weak" &&
-      "These markets show limited signal, weak quality, or low conviction."}
-  </p>
-</div>
+                    <p className="text-sm text-zinc-600">
+                      {groupKey === "confirmed" &&
+                        "Demand and participation are reinforcing each other."}
+                      {groupKey === "conviction_mismatch" &&
+                        "Attention is present, but structure or participation is not keeping up."}
+                      {groupKey === "structure_led" &&
+                        "Structure is present, but demand or activation is lagging."}
+                      {groupKey === "weak" &&
+                        "These markets show limited signal, weak quality, or low conviction."}
+                    </p>
+                  </div>
 
                   <div className="grid gap-8 lg:grid-cols-2">
                     {group.map((item) => (
