@@ -152,11 +152,12 @@ export default async function HomePage() {
         <p className="mt-2 max-w-3xl text-sm text-zinc-600">
           A real-time intelligence view for evaluating market structure, external demand, and alignment. 
           The markets displayed here are a random sample for demonstration purposes.
-          <br />
-          <span className="italic">
-            Click “View detail” on any market to explore deeper structural, demand, and alignment diagnostics.
-          </span>
         </p>
+
+        {/* Subtle CTA */}
+        <div className="mt-3 inline-block rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+          Click <span className="font-medium">“View detail”</span> on any market to explore deeper structural, demand, and alignment diagnostics.
+        </div>
       </section>
 
       {pageError ? (
