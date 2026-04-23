@@ -242,15 +242,10 @@ export default function CandidateCard({
         ) : null}
       </div>
 
-<div className="mt-3">
-  <Link
-    href={url || `/markets/${marketId}`}
-    className="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900"
-  >
-    View detail
-    <span aria-hidden="true">→</span>
-  </Link>
-</div>
+      <div className="mt-5 flex items-center gap-4 text-sm font-medium">
+        <Link href={detailHref} className="text-blue-600 hover:underline">
+          View detail
+        </Link>
 
         {url ? (
           <a
