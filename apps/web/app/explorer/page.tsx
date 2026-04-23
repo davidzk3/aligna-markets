@@ -140,7 +140,7 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 sm:px-6">
-      <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+      <section className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
         <p className="text-sm font-medium text-zinc-500">
           Prediction Market Intelligence
         </p>
@@ -154,7 +154,7 @@ export default async function HomePage() {
           The markets displayed here are a random sample for demonstration purposes.
         </p>
 
-        <div className="mt-3 inline-block rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+        <div className="mt-3 rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-sm leading-6 text-blue-700 sm:inline-block">
           Click <span className="font-medium">“View detail”</span> on any market to explore deeper structural, demand, and alignment diagnostics.
         </div>
       </section>
@@ -168,8 +168,7 @@ export default async function HomePage() {
           No markets found.
         </section>
       ) : (
-        <section className="space-y-10">
-          {/* COUNTS */}
+        <section className="space-y-8 sm:space-y-10">
           {(() => {
             const counts = {
               confirmed: 0,
@@ -186,7 +185,7 @@ export default async function HomePage() {
             });
 
             return (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {Object.entries(counts).map(([k, v]) => {
                   const sectionId =
                     k === "confirmed"
@@ -201,7 +200,7 @@ export default async function HomePage() {
                     <a
                       key={k}
                       href={`#${sectionId}`}
-                      className="rounded-xl border border-zinc-200 bg-white px-4 py-3 shadow-sm transition hover:bg-zinc-50"
+                      className="rounded-xl border border-zinc-200 bg-white px-3 py-3 shadow-sm transition hover:bg-zinc-50 sm:px-4"
                     >
                       <div className="text-sm font-semibold text-zinc-900">
                         {k === "confirmed" && "Confirmed"}
@@ -217,7 +216,6 @@ export default async function HomePage() {
             );
           })()}
 
-          {/* GROUPED SECTIONS */}
           {(() => {
             const order = [
               "confirmed",
@@ -251,16 +249,16 @@ export default async function HomePage() {
               if (!group || group.length === 0) return null;
 
               return (
-                <div key={groupKey} id={groupKey} className="space-y-4">
+                <div key={groupKey} id={groupKey} className="space-y-3 sm:space-y-4">
                   <div className="space-y-1">
-                    <h2 className="text-2xl font-semibold text-zinc-900">
+                    <h2 className="text-xl font-semibold text-zinc-900 sm:text-2xl">
                       {groupKey === "confirmed" && "Confirmed"}
                       {groupKey === "conviction_mismatch" && "Demand ahead of structure"}
                       {groupKey === "structure_led" && "Structure ahead of demand"}
                       {groupKey === "weak" && "Weak"}
                     </h2>
 
-                    <p className="text-sm text-zinc-600">
+                    <p className="text-sm leading-6 text-zinc-600">
                       {groupKey === "confirmed" &&
                         "Demand and participation are reinforcing each other."}
                       {groupKey === "conviction_mismatch" &&
@@ -272,7 +270,7 @@ export default async function HomePage() {
                     </p>
                   </div>
 
-                  <div className="grid gap-8 lg:grid-cols-2">
+                  <div className="grid gap-6 sm:gap-8 lg:grid-cols-2">
                     {group.map((item) => (
                       <CandidateCard
                         key={item.market_id}
