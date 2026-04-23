@@ -150,11 +150,10 @@ export default async function HomePage() {
         </h1>
 
         <p className="mt-2 max-w-3xl text-sm text-zinc-600">
-          A real-time intelligence view for evaluating market structure, external demand, and alignment. 
+          A real-time intelligence view for evaluating market structure, external demand, and alignment.
           The markets displayed here are a random sample for demonstration purposes.
         </p>
 
-        {/* Subtle CTA */}
         <div className="mt-3 inline-block rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-sm text-blue-700">
           Click <span className="font-medium">“View detail”</span> on any market to explore deeper structural, demand, and alignment diagnostics.
         </div>
@@ -179,11 +178,7 @@ export default async function HomePage() {
               weak: 0,
             };
 
-            const remainingMarkets = markets.filter(
-              (m) => m.intervention_needed !== true
-            );
-
-            remainingMarkets.forEach((m) => {
+            markets.forEach((m) => {
               const key = m.alignmentState || "weak";
               if (counts[key as keyof typeof counts] !== undefined) {
                 counts[key as keyof typeof counts]++;
@@ -231,15 +226,11 @@ export default async function HomePage() {
               "weak",
             ];
 
-            const remainingMarkets = markets.filter(
-              (m) => m.intervention_needed !== true
-            );
-
             const grouped: Record<string, typeof markets> = {};
 
             order.forEach((k) => (grouped[k] = []));
 
-            remainingMarkets.forEach((m) => {
+            markets.forEach((m) => {
               const key = m.alignmentState || "weak";
               if (!grouped[key]) grouped[key] = [];
               grouped[key].push(m);
@@ -298,8 +289,7 @@ export default async function HomePage() {
                         incentiveDependency={item.incentive_dependency}
                         activityQuality={item.activity_quality}
                         expectedFailureMode={
-                          item.intervention_intelligence
-                            ?.expected_failure_mode ?? null
+                          item.intervention_intelligence?.expected_failure_mode ?? null
                         }
                         hasContextualSummary={item.hasContextualSummary}
                         scoreLabel="Structural quality score"
