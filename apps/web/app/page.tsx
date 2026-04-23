@@ -215,7 +215,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-4 lg:grid-cols-3">
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {lifecycle.map((item, index) => (
               <div
                 key={item.title}
@@ -227,7 +227,7 @@ export default function HomePage() {
                 <div className="mt-4 text-2xl font-semibold tracking-[-0.03em] text-neutral-950">
                   {item.title}
                 </div>
-                <p className="mt-4 min-h-[140px] text-sm leading-7 text-neutral-700">
+                <p className="mt-4 text-sm leading-7 text-neutral-700 lg:min-h-[140px]">
                   {item.body}
                 </p>
               </div>
