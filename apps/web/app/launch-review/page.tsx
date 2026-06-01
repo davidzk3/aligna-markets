@@ -27,12 +27,12 @@ export default function LaunchReviewPage() {
 
     ambiguityDNA: [
       { type: "Boundary Risk", note: "Undefined 'intercept' criteria. Historical UMA cases (March 2, 2026) show that debris damage from intercepted projectiles was disputed as a 'strike'. Future resolution will fail without kinetic ground-impact verification." },
-      { type: "Source Fragility", note: "Primary source hierarchy lacks a 'Secondary Verified Fallback' for official military statements, leading to potential oracle request delays." },
+      { type: "Source Hierarchy Inversion", note: "The submitted draft lists international media as the sole resolution source with no fallback. UMA convention for conflict markets (confirmed by the March 2, 2026 Kyiv precedent) requires a two-tier structure: international media consensus as primary, with official Ukrainian military statements (Air Force of the Armed Forces of Ukraine) and government authorities (Kyiv City State Administration, Mayor of Kyiv) as the fallback in cases of ambiguity. Omitting the official tier creates a gap a disputer can exploit if media reporting is contradictory." },
       { type: "Timing Conflict", note: "Monday/Sunday boundary logic (Inclusive) requires explicit EET-to-UTC settlement window to prevent 'Early Request' disputes." }
     ],
 
     proposedHardening: {
-      revisedRules: "A qualifying strike is defined as ground-level kinetic impact confirmed by municipality imagery. Intercepted projectiles landing on ground territory are explicitly excluded. Resolution Source: 1. International News Consensus. 2. Kyiv City State Administration official bulletins.",
+      revisedRules: "A qualifying strike is defined as ground-level kinetic impact confirmed by municipality imagery. Intercepted projectiles landing on ground territory are explicitly excluded. Resolution Source: 1. Consensus of credible reporting from major international media and national broadcasters (Reuters, AP, AFP). 2. In cases of ambiguity: official statements from the Ukrainian military (Air Force of the Armed Forces of Ukraine) and Ukrainian government authorities, including the Kyiv City State Administration and the Mayor of Kyiv.",
       actionItems: ["Harden Ground-Impact Definition", "Standardize EET Settlement Boundary", "Add Military Source Hierarchy"]
     }
   };
@@ -57,7 +57,7 @@ export default function LaunchReviewPage() {
               <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
             </span>
             <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-700">
-              Demo Fixture · Seeded Case Study
+              Seeded Case Study
             </span>
           </div>
         </div>
