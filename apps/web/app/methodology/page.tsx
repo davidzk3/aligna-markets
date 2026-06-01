@@ -2,22 +2,22 @@ export default function MethodologyPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-10 px-4 sm:px-6">
 
-      {/* Hero */}
-      <section className="pt-2">
-        <p className="text-xs font-semibold uppercase tracking-widest text-indigo-600">
-          Current Coverage: Polymarket + UMA Optimistic Oracle
-        </p>
-        <h1 className="mt-3 text-3xl font-bold text-zinc-900 sm:text-4xl">
-          Forensic Determinism:
-          <br />
-          <span className="text-zinc-400">Resolution-First Intelligence</span>
-        </h1>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-600">
-          Aligna treats prediction markets not just as settlement systems. Our methodology
-          focuses on eliminating structural friction through forensic ambiguity detection and
-          Bayesian learning loops.
-        </p>
-      </section>
+  {/* Hero */}
+  <section className="pt-2">
+    <p className="text-xs font-semibold uppercase tracking-widest text-indigo-600">
+      Current Coverage: Polymarket + UMA Optimistic Oracle
+    </p>
+    <h1 className="mt-3 text-3xl font-bold text-zinc-900 sm:text-4xl">
+      Forensic Determinism:
+      <br />
+    </h1>
+    <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-600">
+      Aligna treats prediction markets not just as settlement systems. Our methodology
+      focuses on eliminating structural friction through forensic ambiguity detection and
+      Bayesian learning loops.
+    </p>
+  </section>
+
 
       {/* Four pillars */}
       <section className="grid gap-4 sm:grid-cols-2">
