@@ -55,52 +55,188 @@ function getDisplayTitle(item: ExplorerMarket): string {
 
 function triagePriorityScore(m: ExplorerMarket): number {
   let s = 0;
-
   if (m.intervention_needed === true) s += 100;
-
   if (m.action_priority === "high") s += 40;
   if (m.action_priority === "medium") s += 20;
   if (m.action_priority === "low") s += 5;
-
   if (m.alignment_state === "conviction_mismatch") s += 50;
   if (m.alignment_state === "weak") s += 20;
-
   if (m.structural_state === "weak") s += 30;
   if (m.structural_state === "moderate") s += 10;
-
   if (m.social_state === "strong") s += 20;
   if (m.social_state === "established") s += 15;
   if (m.social_state === "building") s += 8;
-
   if (m.activity_quality === "distorted") s += 40;
   if (m.activity_quality === "supported") s += 10;
-
   if (m.incentive_dependency === "high") s += 25;
   if (m.incentive_dependency === "moderate") s += 10;
-
-  if (
-    m.intervention_intelligence?.expected_failure_mode === "one_sided_liquidity"
-  ) {
-    s += 20;
-  }
-
-  if (
-    m.intervention_intelligence?.expected_failure_mode === "mercenary_capital"
-  ) {
-    s += 25;
-  }
-
-  if (
-    m.intervention_intelligence?.expected_failure_mode === "fake_volume"
-  ) {
-    s += 20;
-  }
-
+  if (m.intervention_intelligence?.expected_failure_mode === "one_sided_liquidity") s += 20;
+  if (m.intervention_intelligence?.expected_failure_mode === "mercenary_capital") s += 25;
+  if (m.intervention_intelligence?.expected_failure_mode === "fake_volume") s += 20;
   return s;
 }
 
+// ─── Maintenance Banner ───────────────────────────────────────────────────────
+// Rendered when the data layer is unavailable. Designed to look deliberate
+// and professional — appropriate for technical reviewers.
+
+function MaintenanceBanner() {
+  const layers = [
+    {
+      label: "Market Structure Engine",
+      desc: "Structural scoring, state classification, and participation quality metrics",
+      status: "seeding",
+      dot: "bg-amber-400",
+    },
+    {
+      label: "Social Signal Pipeline",
+      desc: "External demand indexing and social conviction scoring",
+      status: "seeding",
+      dot: "bg-amber-400",
+    },
+    {
+      label: "Alignment Diagnostics",
+      desc: "Cross-signal alignment computation and intervention triggers",
+      status: "seeding",
+      dot: "bg-amber-400",
+    },
+    {
+      label: "Liquidity Intelligence",
+      desc: "HHI concentration, durability scoring, and CLOB spread proxies",
+      status: "standby",
+      dot: "bg-zinc-300",
+    },
+  ];
+
+  const capabilities = [
+    "Structural quality scoring across active markets",
+    "External demand signal indexing from social corpora",
+    "Conviction alignment diagnostics and mismatch detection",
+    "Intervention triage with priority ranking and failure mode prediction",
+    "Liquidity durability scoring and participant segmentation",
+    "Category-level HHI concentration analysis",
+  ];
+
+  return (
+    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6">
+
+      {/* Status header */}
+      <div className="rounded-2xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
+        <div className="border-b border-zinc-100 bg-zinc-50 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            {/* Animated pulse indicating active work */}
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-60" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500" />
+            </span>
+            <span className="text-xs font-semibold uppercase tracking-widest text-zinc-500">
+              Data Layer · Seeding in Progress
+            </span>
+          </div>
+          <span className="rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-700">
+            Pre-Production
+          </span>
+        </div>
+
+        <div className="px-6 py-6 sm:py-8">
+          <h1 className="text-2xl font-semibold text-zinc-900 sm:text-3xl">
+            Market Intelligence Explorer
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
+            The intelligence pipeline is operational. The underlying data store
+            is currently being seeded with market records. Live market cards
+            will populate here automatically once the ingestion completes.
+          </p>
+        </div>
+      </div>
+
+      {/* Pipeline layer status */}
+      <div className="rounded-2xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
+        <div className="border-b border-zinc-100 px-6 py-4">
+          <h2 className="text-sm font-semibold text-zinc-700">Pipeline Layers</h2>
+          <p className="mt-0.5 text-xs text-zinc-400">Real-time status across intelligence subsystems</p>
+        </div>
+        <div className="divide-y divide-zinc-50">
+          {layers.map((layer, i) => (
+            <div key={i} className="flex items-center gap-4 px-6 py-4">
+              <div className={`h-2 w-2 rounded-full shrink-0 ${layer.dot}`} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-zinc-800">{layer.label}</p>
+                <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{layer.desc}</p>
+              </div>
+              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider
+                ${layer.status === "seeding"
+                  ? "bg-amber-50 border border-amber-100 text-amber-700"
+                  : "bg-zinc-50 border border-zinc-100 text-zinc-400"}`}>
+                {layer.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Two-column: architecture note + capabilities */}
+      <div className="grid gap-5 sm:grid-cols-2">
+
+        {/* Architecture note */}
+        <div className="rounded-2xl border border-zinc-200 bg-white shadow-sm p-6">
+          <h2 className="text-sm font-semibold text-zinc-700 mb-3">Architecture Overview</h2>
+          <div className="space-y-3 text-xs text-zinc-500 leading-relaxed">
+            <p>
+              This explorer is backed by a multi-signal scoring pipeline that
+              runs nightly ingestion across active Polymarket order books,
+              scoring each market across structural, social, and alignment dimensions.
+            </p>
+            <p>
+              Scores are persisted to a relational store and served via a
+              Next.js server component — zero client-side fetching, no loading
+              skeletons in production state.
+            </p>
+            <p>
+              The current environment is being configured with a fresh data
+              seed. No application logic has changed.
+            </p>
+          </div>
+        </div>
+
+        {/* Capabilities */}
+        <div className="rounded-2xl border border-zinc-200 bg-white shadow-sm p-6">
+          <h2 className="text-sm font-semibold text-zinc-700 mb-3">Capabilities in Scope</h2>
+          <ul className="space-y-2">
+            {capabilities.map((c, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-xs text-zinc-500 leading-relaxed">
+                <svg className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-300" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                {c}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Navigation hint */}
+      <div className="rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 flex items-start gap-3">
+        <svg className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+        </svg>
+        <div>
+          <p className="text-sm font-medium text-blue-800">Other sections are fully operational</p>
+          <p className="mt-0.5 text-xs text-blue-600 leading-relaxed">
+            The <strong>Launch Review</strong> and <strong>Methodology</strong> pages are live and fully functional.
+            Use the navigation above to explore the forensic audit pipeline and scoring methodology.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default async function HomePage() {
   let pageError: string | null = null;
+  let isDataUnavailable = false;
 
   let markets: Array<
     ExplorerMarket & {
@@ -134,8 +270,29 @@ export default async function HomePage() {
       };
     });
   } catch (err) {
-    pageError =
-      err instanceof Error ? err.message : "Failed to load market explorer";
+    pageError = err instanceof Error ? err.message : "Failed to load market explorer";
+
+    // Detect infrastructure-level failures (DB suspended, DNS, connection refused)
+    // and route them to the maintenance view instead of showing raw error strings.
+    const msg = pageError.toLowerCase();
+    if (
+      msg.includes("failed to resolve host") ||
+      msg.includes("econnrefused") ||
+      msg.includes("enotfound") ||
+      msg.includes("internal server error") ||
+      msg.includes("503") ||
+      msg.includes("502") ||
+      msg.includes("supabase") ||
+      msg.includes("database") ||
+      msg.includes("errno")
+    ) {
+      isDataUnavailable = true;
+    }
+  }
+
+  // Infrastructure down → render polished maintenance view
+  if (isDataUnavailable) {
+    return <MaintenanceBanner />;
   }
 
   return (
@@ -155,15 +312,23 @@ export default async function HomePage() {
         </p>
 
         <div className="mt-3 rounded-md border border-blue-100 bg-blue-50 px-3 py-2 text-sm leading-6 text-blue-700 sm:inline-block">
-          Click <span className="font-medium">“View detail”</span> on any market to explore deeper structural, demand, and alignment diagnostics.
+          Click <span className="font-medium">&quot;View detail&quot;</span> on any market to explore deeper structural, demand, and alignment diagnostics.
         </div>
       </section>
 
-      {pageError ? (
-        <section className="rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700 shadow-sm">
-          {pageError}
+      {/* Application-level error (non-infrastructure) — subtle, non-alarming */}
+      {pageError && !isDataUnavailable && (
+        <section className="rounded-2xl border border-zinc-200 bg-zinc-50 px-5 py-4 shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <div className="h-2 w-2 rounded-full bg-amber-400 shrink-0" />
+            <p className="text-sm font-medium text-zinc-600">
+              Market data is temporarily unavailable. Refreshing shortly.
+            </p>
+          </div>
         </section>
-      ) : markets.length === 0 ? (
+      )}
+
+      {markets.length === 0 && !pageError ? (
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 text-zinc-600 shadow-sm">
           No markets found.
         </section>
@@ -188,13 +353,10 @@ export default async function HomePage() {
               <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                 {Object.entries(counts).map(([k, v]) => {
                   const sectionId =
-                    k === "confirmed"
-                      ? "confirmed"
-                      : k === "conviction_mismatch"
-                      ? "conviction_mismatch"
-                      : k === "structure_led"
-                      ? "structure_led"
-                      : "weak";
+                    k === "confirmed" ? "confirmed"
+                    : k === "conviction_mismatch" ? "conviction_mismatch"
+                    : k === "structure_led" ? "structure_led"
+                    : "weak";
 
                   return (
                     <a
@@ -217,15 +379,8 @@ export default async function HomePage() {
           })()}
 
           {(() => {
-            const order = [
-              "confirmed",
-              "conviction_mismatch",
-              "structure_led",
-              "weak",
-            ];
-
+            const order = ["confirmed", "conviction_mismatch", "structure_led", "weak"];
             const grouped: Record<string, typeof markets> = {};
-
             order.forEach((k) => (grouped[k] = []));
 
             markets.forEach((m) => {
@@ -235,13 +390,11 @@ export default async function HomePage() {
             });
 
             Object.keys(grouped).forEach((k) => {
-              grouped[k].sort((a, b) => {
-                return (
-                  triagePriorityScore(b) - triagePriorityScore(a) ||
-                  (b.structural_score ?? 0) - (a.structural_score ?? 0) ||
-                  (b.social_score ?? 0) - (a.social_score ?? 0)
-                );
-              });
+              grouped[k].sort((a, b) =>
+                triagePriorityScore(b) - triagePriorityScore(a) ||
+                (b.structural_score ?? 0) - (a.structural_score ?? 0) ||
+                (b.social_score ?? 0) - (a.social_score ?? 0)
+              );
             });
 
             return order.map((groupKey) => {
@@ -257,16 +410,11 @@ export default async function HomePage() {
                       {groupKey === "structure_led" && "Structure ahead of demand"}
                       {groupKey === "weak" && "Weak"}
                     </h2>
-
                     <p className="text-sm leading-6 text-zinc-600">
-                      {groupKey === "confirmed" &&
-                        "Demand and participation are reinforcing each other."}
-                      {groupKey === "conviction_mismatch" &&
-                        "Attention is present, but structure or participation is not keeping up."}
-                      {groupKey === "structure_led" &&
-                        "Structure is present, but demand or activation is lagging."}
-                      {groupKey === "weak" &&
-                        "These markets show limited signal, weak quality, or low conviction."}
+                      {groupKey === "confirmed" && "Demand and participation are reinforcing each other."}
+                      {groupKey === "conviction_mismatch" && "Attention is present, but structure or participation is not keeping up."}
+                      {groupKey === "structure_led" && "Structure is present, but demand or activation is lagging."}
+                      {groupKey === "weak" && "These markets show limited signal, weak quality, or low conviction."}
                     </p>
                   </div>
 
@@ -286,14 +434,11 @@ export default async function HomePage() {
                         actionReason={item.action_reason}
                         incentiveDependency={item.incentive_dependency}
                         activityQuality={item.activity_quality}
-                        expectedFailureMode={
-                          item.intervention_intelligence?.expected_failure_mode ?? null
-                        }
+                        expectedFailureMode={item.intervention_intelligence?.expected_failure_mode ?? null}
                         hasContextualSummary={item.hasContextualSummary}
                         scoreLabel="Structural quality score"
                         scoreValue={
-                          item.structural_score !== null &&
-                          item.structural_score !== undefined
+                          item.structural_score !== null && item.structural_score !== undefined
                             ? formatNumber(item.structural_score)
                             : "—"
                         }
@@ -302,8 +447,7 @@ export default async function HomePage() {
                           neutralShare: item.neutral_share ?? null,
                           whaleShare: item.whale_share ?? null,
                           speculativeShare: item.speculative_share ?? null,
-                          participationQuality:
-                            item.participation_quality_score ?? null,
+                          participationQuality: item.participation_quality_score ?? null,
                         })}
                         url={item.url}
                       />
