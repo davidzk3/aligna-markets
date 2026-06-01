@@ -182,18 +182,17 @@ function MaintenanceBanner() {
           <h2 className="text-sm font-semibold text-zinc-700 mb-3">Architecture Overview</h2>
           <div className="space-y-3 text-xs text-zinc-500 leading-relaxed">
             <p>
-              This explorer is backed by a multi-signal scoring pipeline that
-              runs nightly ingestion across active Polymarket order books,
-              scoring each market across structural, social, and alignment dimensions.
+              The explorer is backed by a multi-signal scoring pipeline that 
+              continuously indexes live market protocols, scoring each market 
+              across structural, demand, and alignment dimensions.
             </p>
             <p>
-              Scores are persisted to a relational store and served via a
-              Next.js server component — zero client-side fetching, no loading
-              skeletons in production state.
+              Every tracked configuration is systematically evaluated against 
+              standardized operational parameters and risk dimensions to establish 
+              clear telemetry baselines.
             </p>
             <p>
-              The current environment is being configured with a fresh data
-              seed. No application logic has changed.
+              The current environment is undergoing a scheduled index synchronization.
             </p>
           </div>
         </div>
