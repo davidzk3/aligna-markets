@@ -103,7 +103,7 @@ function MaintenanceBanner() {
     {
       label: "Liquidity Intelligence",
       desc: "HHI concentration, durability scoring, and CLOB spread proxies",
-      status: "standby",
+      status: "queued",
       dot: "bg-zinc-300",
     },
   ];
@@ -143,9 +143,8 @@ function MaintenanceBanner() {
             Market Intelligence Explorer
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
-            The intelligence pipeline is operational. The underlying data store
-            is currently being seeded with market records. Live market cards
-            will populate here automatically once the ingestion completes.
+            A real-time intelligence view for evaluating market structure, external demand, and alignment. 
+            The underlying data store is currently being seeded.
           </p>
         </div>
       </div>
@@ -167,7 +166,7 @@ function MaintenanceBanner() {
               <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider
                 ${layer.status === "seeding"
                   ? "bg-amber-50 border border-amber-100 text-amber-700"
-                  : "bg-zinc-50 border border-zinc-100 text-zinc-400"}`}>
+                  : "bg-zinc-50 border border-zinc-200 text-zinc-500"}`}>
                 {layer.status}
               </span>
             </div>
@@ -215,19 +214,7 @@ function MaintenanceBanner() {
         </div>
       </div>
 
-      {/* Navigation hint */}
-      <div className="rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 flex items-start gap-3">
-        <svg className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-        </svg>
-        <div>
-          <p className="text-sm font-medium text-blue-800">Other sections are fully operational</p>
-          <p className="mt-0.5 text-xs text-blue-600 leading-relaxed">
-            The <strong>Launch Review</strong> and <strong>Methodology</strong> pages are live and fully functional.
-            Use the navigation above to explore the forensic audit pipeline and scoring methodology.
-          </p>
-        </div>
-      </div>
+
     </div>
   );
 }
