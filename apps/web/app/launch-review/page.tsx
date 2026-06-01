@@ -4,15 +4,14 @@ import { useMemo, useState } from "react";
 import { type DesignReviewInput } from "@/lib/api";
 
 const PREFILLED_GEOPOLITICAL_CASE = {
-  title: "Russia strike impacts Kyiv municipality during week of April 27, 2026?",
-  description: 
+  title: "Russia strike impacts Kyiv municipality during week of June 15, 2026?",
+  description:
     "This market resolves to 'Yes' if the Russian Armed Forces initiate a drone, missile, or air strike on Kyiv municipality ground territory. Missiles or drones that are intercepted and surface-to-air missile strikes will not qualify. Resolution depends on kinetic ground impact confirmed by major international media.",
   category: "geopolitics",
   market_type: "event_binary",
   protocol: "polymarket",
   oracle_family: "uma_oo",
-  // Professional sections derived from UMA/Polymarket research [cite: 9, 10, 11]
-  timeframe: "Monday, April 27, 2026 – Sunday, May 3, 2026 (Inclusive)",
+  timeframe: "Monday, June 15, 2026 – Sunday, June 21, 2026 (Inclusive)",
   timezone: "Eastern European Time (EET)",
   primary_source: "Consensus of major international news agencies (Reuters, AP, AFP).",
   additional_data: "Official bulletins from the Kyiv City State Administration or the Mayor of Kyiv in the case of news ambiguity."
@@ -22,11 +21,10 @@ export default function LaunchReviewPage() {
   const [loading, setLoading] = useState(false);
   const [hasRun, setHasRun] = useState(false);
 
-  // RESEARCH DATA: Reasoning from the March 2026 History [cite: 1, 6, 11]
   const researchResult = {
     verdict: "Structural Redesign Required",
-    rationale: "Historical Conflict Mapping from the March 2, 2026 Kyiv dispute identifies high Semantic Divergence between 'impact' and 'interception debris.' Without explicit ground-damage criteria, this future April 27 market remains vulnerable to the same settlement friction.",
-    
+    rationale: "Historical Conflict Mapping from the March 2, 2026 Kyiv dispute identifies high Semantic Divergence between 'impact' and 'interception debris.' Without explicit ground-damage criteria, this June 15 market remains vulnerable to the same settlement friction.",
+
     ambiguityDNA: [
       { type: "Boundary Risk", note: "Undefined 'intercept' criteria. Historical UMA cases (March 2, 2026) show that debris damage from intercepted projectiles was disputed as a 'strike'. Future resolution will fail without kinetic ground-impact verification." },
       { type: "Source Fragility", note: "Primary source hierarchy lacks a 'Secondary Verified Fallback' for official military statements, leading to potential oracle request delays." },
@@ -50,10 +48,22 @@ export default function LaunchReviewPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-8">
       <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
-        <p className="text-sm font-medium text-zinc-500">Launch Review Protocol</p>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">Probabilistic Conflict Detection</h1>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <p className="text-sm font-medium text-zinc-500">Launch Review Protocol</p>
+          {/* Demo fixture badge — matches the pre-production indicator pattern */}
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+            </span>
+            <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-amber-700">
+              Demo Fixture · Seeded Case Study
+            </span>
+          </div>
+        </div>
+        <h1 className="mt-2 text-2xl font-semibold text-zinc-900">Probabilistic Conflict Detection</h1>
         <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-600">
-          Identify Ambiguity DNA patterns in rule wording. Our system reasons from 2,800+ historical outcomes to detect 
+          Identify Ambiguity DNA patterns in rule wording. Our system reasons from 2,800+ historical outcomes to detect
           future resolution friction before the market goes live.
         </p>
       </section>
@@ -136,9 +146,9 @@ export default function LaunchReviewPage() {
         <section className="rounded-2xl border border-zinc-900 bg-zinc-900 p-8 text-white shadow-xl">
           <h2 className="text-xl font-bold">Proposed Rule Hardening</h2>
           <p className="mt-4 text-sm leading-8 text-zinc-300 italic">
-            "{researchResult.proposedHardening.revisedRules}"
+            &ldquo;{researchResult.proposedHardening.revisedRules}&rdquo;
           </p>
-          <div className="mt-6 flex gap-4">
+          <div className="mt-6 flex gap-4 flex-wrap">
             {researchResult.proposedHardening.actionItems.map(item => (
               <span key={item} className="rounded-lg bg-zinc-800 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider">
                 {item}
