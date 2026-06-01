@@ -8,7 +8,7 @@ export default function MethodologyPage() {
       Current Coverage: Polymarket + UMA Optimistic Oracle
     </p>
     <h1 className="mt-3 text-3xl font-bold text-zinc-900 sm:text-4xl">
-      Forensic Determinism:
+      Forensic Determinism
       <br />
     </h1>
     <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-600">
